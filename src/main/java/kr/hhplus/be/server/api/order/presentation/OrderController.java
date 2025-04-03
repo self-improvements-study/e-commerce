@@ -6,6 +6,8 @@ import kr.hhplus.be.server.api.order.presentation.controller.dto.response.FindOr
 import kr.hhplus.be.server.api.order.presentation.controller.dto.response.FindOrderResponse;
 import kr.hhplus.be.server.common.response.CommonResponse;
 import kr.hhplus.be.server.config.swagger.api.OrderApi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -14,6 +16,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/orders")
 public class OrderController implements OrderApi {
+
+    private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
 
     // 상품 주문
     @PostMapping("{userId}")
@@ -26,7 +30,7 @@ public class OrderController implements OrderApi {
                 50000L,
                 "PAYMENT_WAITING"
         );
-
+        logger.info("컨트롤러 진입 - 주문 생성 요청");
         return CommonResponse.success(data);
     }
 

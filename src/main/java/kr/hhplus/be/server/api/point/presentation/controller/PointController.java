@@ -1,11 +1,14 @@
 package kr.hhplus.be.server.api.point.presentation.controller;
 
+import kr.hhplus.be.server.api.payment.presentation.controller.PaymentController;
 import kr.hhplus.be.server.api.point.presentation.controller.dto.request.ChargePointRequest;
 import kr.hhplus.be.server.api.point.presentation.controller.dto.response.ChargePointResponse;
 import kr.hhplus.be.server.api.point.presentation.controller.dto.response.FindPointHistoryResponse;
 import kr.hhplus.be.server.api.point.presentation.controller.dto.response.FindUserPointResponse;
 import kr.hhplus.be.server.common.response.CommonResponse;
 import kr.hhplus.be.server.config.swagger.api.PointApi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -15,6 +18,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/points")
 public class PointController implements PointApi {
+
+    private static final Logger logger = LoggerFactory.getLogger(PointController.class);
 
     // 포인트 조회
     @GetMapping("/{userId}")
@@ -30,6 +35,9 @@ public class PointController implements PointApi {
             @RequestBody ChargePointRequest request
     ) {
         ChargePointResponse data = new ChargePointResponse(20000L);
+
+        logger.info("컨트롤러 진입 - 포인트 충전 요청");
+
         return CommonResponse.success(data);
     }
 
