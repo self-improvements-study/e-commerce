@@ -30,7 +30,7 @@ e-커머스 상품 주문 서비스 구현
 
 # 3. 도메인 다이어그램
 
-![image](https://github.com/user-attachments/assets/6262b24c-dee9-4551-983f-3f7980cb34c2)
+![img.png](img.png)![image](https://github.com/user-attachments/assets/6262b24c-dee9-4551-983f-3f7980cb34c2)
 
 ## 정책
 - 최대 보유 포인트는 1,000,000원이다.
