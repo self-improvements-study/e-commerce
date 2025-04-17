@@ -45,7 +45,8 @@ public enum BusinessError {
     COUPON_ISSUE_LIMIT_EXCEEDED("C006", HttpStatus.BAD_REQUEST, "쿠폰 발급 한도를 초과했습니다."),
     COUPON_USAGE_NOT_ALLOWED("C007", HttpStatus.FORBIDDEN, "해당 쿠폰은 현재 사용할 수 없습니다."),
     INVALID_COUPON_QUANTITY("C008", HttpStatus.BAD_REQUEST, "차감 수량은 0보다 커야 합니다."),
-    INVALID_DISCOUNT_PRICE("O005", HttpStatus.BAD_REQUEST, "할인 금액은 상품 금액보다 작아야 합니다."),
+    INVALID_DISCOUNT_PRICE("O009", HttpStatus.BAD_REQUEST, "할인 금액은 상품 금액보다 작아야 합니다."),
+    COUPON_NOT_USED("O010", HttpStatus.BAD_REQUEST, "할인 금액은 상품 금액보다 작아야 합니다."),
 
     // Order --------------------------------------------------------------------------------------------------
 

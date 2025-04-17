@@ -21,7 +21,7 @@ public class Coupon extends AuditableEntity {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "point_id", nullable = false, updatable = false)
+    @Column(name = "coupon_id", nullable = false, updatable = false)
     private Long id;
 
     /**
