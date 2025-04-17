@@ -12,7 +12,11 @@ import org.hibernate.type.YesNoConverter;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "user_coupon")
+@Table(name = "user_coupon",
+        indexes = {
+                @Index(name = "idx_user_coupon_user_id", columnList = "user_id")
+        }
+)
 public class UserCoupon extends AuditableEntity {
 
     /**
