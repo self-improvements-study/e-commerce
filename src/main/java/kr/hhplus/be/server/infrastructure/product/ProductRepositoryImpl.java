@@ -72,9 +72,9 @@ public class ProductRepositoryImpl implements ProductRepository {
                 .join(order).on(order.id.eq(orderItem.orderId))
                 .where(
                         order.status.eq(Order.Status.SUCCESS),
-                        order.createdDate.goe(daysAgo)
+                        order.orderDate.goe(daysAgo)
                 )
-                .groupBy(product.id, product.name)
+                .groupBy(product.id)
                 .orderBy(salesCount.desc())
                 .limit(limit)
                 .fetch();
