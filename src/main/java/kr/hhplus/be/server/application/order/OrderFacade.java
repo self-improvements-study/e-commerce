@@ -3,6 +3,7 @@ package kr.hhplus.be.server.application.order;
 import kr.hhplus.be.server.domain.coupon.CouponCommand;
 import kr.hhplus.be.server.domain.coupon.CouponInfo;
 import kr.hhplus.be.server.domain.coupon.CouponService;
+import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderCommand;
 import kr.hhplus.be.server.domain.order.OrderInfo;
 import kr.hhplus.be.server.domain.order.OrderService;
@@ -104,8 +105,13 @@ public class OrderFacade {
         // 주문 내역 조회 (주문 상태, 총 금액, 주문된 상품들 등)
         OrderInfo.OrderHistory orderInfo = orderService.findOrderByOrderId(orderId);
 
-        // 결제 내역 조회 (결제 ID, 결제 금액, 결제 일시 등)
-        PaymentInfo.PaymentSummary paymentInfo = paymentService.paymentHistory(orderId);
+        PaymentInfo.PaymentSummary paymentInfo = null;
+
+        // 결제가 완료된 상태일 경우만 결제 정보 조회
+        if (orderInfo.getStatus().isDetermined()) {
+            // 결제 내역 조회 (결제 ID, 결제 금액, 결제 일시 등)
+            paymentInfo = paymentService.paymentHistory(orderId);
+        }
 
         // 주문 정보와 결제 정보를 결합하여 DTO 로 반환
         return OrderResult.FindDetail.from(orderInfo, paymentInfo);

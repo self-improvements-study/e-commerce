@@ -29,19 +29,23 @@ public record CouponResponse() {
     public record FindUserCoupon(
             long userCouponId,
             long couponId,
+            long userId,
             String couponName,
             long discount,
             LocalDateTime startedDate,
-            LocalDateTime endedDate
+            LocalDateTime endedDate,
+            boolean used
     ) {
         public static FindUserCoupon from(CouponResult.OwnedCoupon ownedCoupon) {
             return new FindUserCoupon(
                     ownedCoupon.getUserCouponId(),
                     ownedCoupon.getCouponId(),
+                    ownedCoupon.getUserId(),
                     ownedCoupon.getCouponName(),
                     ownedCoupon.getDiscount(),
                     ownedCoupon.getStartedDate(),
-                    ownedCoupon.getEndedDate()
+                    ownedCoupon.getEndedDate(),
+                    ownedCoupon.isUsed()
             );
         }
     }

@@ -1,8 +1,11 @@
 package kr.hhplus.be.server.domain.coupon;
 
 import jakarta.persistence.*;
+import kr.hhplus.be.server.common.exception.BusinessError;
+import kr.hhplus.be.server.common.exception.BusinessException;
 import kr.hhplus.be.server.domain.common.entity.AuditableEntity;
 import lombok.*;
+import org.hibernate.type.YesNoConverter;
 
 @Getter
 @Builder
@@ -35,6 +38,7 @@ public class UserCoupon extends AuditableEntity {
     /**
      * 사용 여부
      */
+    @Convert(converter = YesNoConverter.class)
     @Column(name = "used", nullable = false)
     private boolean used;
 
@@ -43,7 +47,7 @@ public class UserCoupon extends AuditableEntity {
      */
     public void use() {
         if (this.used) {
-            throw new IllegalStateException("이미 사용한 쿠폰입니다.");
+            throw new BusinessException(BusinessError.COUPON_ALREADY_USED);
         }
         this.used = true;
     }
@@ -53,7 +57,7 @@ public class UserCoupon extends AuditableEntity {
      */
     public void cancel() {
         if (!this.used) {
-            throw new IllegalStateException("사용되지 않은 쿠폰입니다.");
+            throw new BusinessException(BusinessError.COUPON_NOT_USED);
         }
 
         this.used = false;

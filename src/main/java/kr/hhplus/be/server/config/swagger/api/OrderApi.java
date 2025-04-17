@@ -5,11 +5,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.hhplus.be.server.presentation.order.OrderRequest;
 import kr.hhplus.be.server.presentation.order.OrderResponse;
-import kr.hhplus.be.server.presentation.order.presentation.controller.dto.request.CreateOrderRequest;
-import kr.hhplus.be.server.presentation.order.presentation.controller.dto.response.CreateOrderResponse;
-import kr.hhplus.be.server.presentation.order.presentation.controller.dto.response.FindOrderDetailResponse;
-import kr.hhplus.be.server.presentation.order.presentation.controller.dto.response.FindOrderResponse;
-import kr.hhplus.be.server.presentation.common.response.CommonResponse;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 

@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.domain.order;
 
-import kr.hhplus.be.server.infrastructure.order.OrderQuery;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,12 +20,12 @@ public final class OrderInfo {
         private final long totalAmount;
         private final List<OrderItemDetail> orderItems;
 
-        public static OrderHistory from(OrderQuery.OrderProjection orderProjection
+        public static OrderHistory from(Order order
                 , List<OrderItemDetail> orderItems) {
             return OrderHistory.builder()
-                    .orderId(orderProjection.getOrderId())
-                    .status(Order.Status.valueOf(orderProjection.getStatus()))
-                    .totalAmount(orderProjection.getTotalAmount())
+                    .orderId(order.getId())
+                    .status(order.getStatus())
+                    .totalAmount(order.getTotalPrice())
                     .orderItems(orderItems)
                     .build();
         }
@@ -42,18 +41,6 @@ public final class OrderInfo {
         private final Integer quantity;
         private final long userCouponId;
         private final long price;
-
-        public static OrderItemDetail from(OrderQuery.OrderItemProjection itemProjection) {
-            return OrderItemDetail.builder()
-                    .optionId(itemProjection.getOptionId())
-                    .productName(itemProjection.getProductName())
-                    .size(itemProjection.getSize())
-                    .color(itemProjection.getColor())
-                    .quantity(itemProjection.getQuantity())
-                    .userCouponId(itemProjection.getUserCouponId())
-                    .price(itemProjection.getPrice())
-                    .build();
-        }
     }
 
     @Getter
@@ -87,7 +74,7 @@ public final class OrderInfo {
     public static class OrderItemSummary {
         private long optionId;
         private long originalPrice;
-        private Integer quantity;
+        private int quantity;
         private Long userCouponId;
 
         public static OrderItemSummary from(OrderItem orderItem) {
