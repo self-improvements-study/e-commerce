@@ -2,7 +2,6 @@ package kr.hhplus.be.server.domain.order;
 
 import kr.hhplus.be.server.common.exception.BusinessError;
 import kr.hhplus.be.server.common.exception.BusinessException;
-import kr.hhplus.be.server.infrastructure.order.OrderQuery;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -34,6 +33,9 @@ class OrderServiceTest {
     @InjectMocks
     OrderService orderService;
 
+    @Mock
+    OrderExternalClient orderExternalClient;
+
     @Nested
     @DisplayName("findOrderByOrderId 테스트")
     class FindOrderByOrderIdTest {
@@ -43,22 +45,24 @@ class OrderServiceTest {
         void success1() {
             // given
             long orderId = 1L;
-            OrderQuery.OrderProjection orderProjection = mock(OrderQuery.OrderProjection.class);
-            when(orderProjection.getOrderId()).thenReturn(orderId);
-            when(orderProjection.getStatus()).thenReturn("PAYMENT_WAITING");
-            when(orderProjection.getTotalAmount()).thenReturn(5000L);
+            Order order = Order.builder()
+                    .id(orderId)
+                    .status(Order.Status.PAYMENT_WAITING)
+                    .totalPrice(5000L)
+                    .build();
 
-            OrderQuery.OrderItemProjection item = mock(OrderQuery.OrderItemProjection.class);
-            when(item.getOptionId()).thenReturn(10L);
-            when(item.getProductName()).thenReturn("상품");
-            when(item.getSize()).thenReturn("M");
-            when(item.getColor()).thenReturn("Red");
-            when(item.getQuantity()).thenReturn(2);
-            when(item.getUserCouponId()).thenReturn(100L);
-            when(item.getPrice()).thenReturn(5000L);
+            OrderQuery.OrderItemProjection item = new OrderQuery.OrderItemProjection(
+                    10L,
+                    "상품",
+                    "M",
+                    "Red",
+                    2,
+                    100L,
+                    5000L
+            );
 
-            when(orderRepository.findOrderByOrderId(orderId)).thenReturn(orderProjection);
-            when(orderRepository.findOrderItemsByOrderId(orderId)).thenReturn(List.of(item));
+            when(orderRepository.findOrderById(orderId)).thenReturn(Optional.of(order));
+            when(orderRepository.findOrderItemByOrderId(orderId)).thenReturn(List.of(item));
 
             // when
             OrderInfo.OrderHistory result = orderService.findOrderByOrderId(orderId);
@@ -133,22 +137,24 @@ class OrderServiceTest {
         void success1() {
             // given
             long userId = 1L;
-            OrderQuery.OrderProjection order = mock(OrderQuery.OrderProjection.class);
-            when(order.getOrderId()).thenReturn(1L);
-            when(order.getStatus()).thenReturn("SUCCESS");
-            when(order.getTotalAmount()).thenReturn(3000L);
+            Order order = Order.builder()
+                    .id(1L)
+                    .status(Order.Status.PAYMENT_WAITING)
+                    .totalPrice(5000L)
+                    .build();
 
-            OrderQuery.OrderItemProjection item = mock(OrderQuery.OrderItemProjection.class);
-            when(item.getOptionId()).thenReturn(10L);
-            when(item.getProductName()).thenReturn("상품");
-            when(item.getSize()).thenReturn("M");
-            when(item.getColor()).thenReturn("Red");
-            when(item.getQuantity()).thenReturn(1);
-            when(item.getUserCouponId()).thenReturn(200L);
-            when(item.getPrice()).thenReturn(3000L);
+            OrderQuery.OrderItemProjection item = new OrderQuery.OrderItemProjection(
+                    10L,
+                    "상품",
+                    "M",
+                    "Red",
+                    2,
+                    100L,
+                    5000L
+            );
 
             when(orderRepository.findOrdersByUserId(userId)).thenReturn(List.of(order));
-            when(orderRepository.findOrderItemsByOrderId(order.getOrderId())).thenReturn(List.of(item));
+            when(orderRepository.findOrderItemByOrderId(order.getId())).thenReturn(List.of(item));
 
             // when
             List<OrderInfo.OrderHistory> result = orderService.findOrdersByUserId(userId);

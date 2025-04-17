@@ -46,7 +46,7 @@ public final class OrderResult {
     public static class OrderItemSummary {
         private long optionId;
         private long originalPrice;
-        private Integer quantity;
+        private int quantity;
         private long userCouponId;
 
         public static OrderItemSummary from(OrderInfo.OrderItemSummary orderItem) {
@@ -122,7 +122,7 @@ public final class OrderResult {
                     .status(orderHistory.getStatus().name())
                     .totalAmount(orderHistory.getTotalAmount())
                     .orderItems(items)
-                    .payment(FindPayment.from(paymentInfo))
+                    .payment(paymentInfo != null ? FindPayment.from(paymentInfo) : null)
                     .build();
         }
 
@@ -133,7 +133,7 @@ public final class OrderResult {
             private String productName;
             private String size;
             private String color;
-            private long quantity;
+            private int quantity;
             private long price;
 
             public static FindOrderItemDetail from(OrderInfo.OrderItemDetail orderItemDetail) {

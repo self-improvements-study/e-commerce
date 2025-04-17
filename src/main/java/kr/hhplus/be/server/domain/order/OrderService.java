@@ -2,7 +2,6 @@ package kr.hhplus.be.server.domain.order;
 
 import kr.hhplus.be.server.common.exception.BusinessError;
 import kr.hhplus.be.server.common.exception.BusinessException;
-import kr.hhplus.be.server.infrastructure.order.OrderQuery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,14 +29,16 @@ public class OrderService {
     public OrderInfo.OrderHistory findOrderByOrderId(long orderId) {
 
         // 1. 주문 정보 조회
-        OrderQuery.OrderProjection order = orderRepository.findOrderByOrderId(orderId);
+//        OrderQuery.OrderProjection order = orderRepository.findOrderByOrderId(orderId);
+        Order order = orderRepository.findOrderById(orderId)
+                .orElseThrow(() -> new BusinessException(BusinessError.ORDER_NOT_FOUND));
 
         // 2. 주문 항목 조회
-        List<OrderQuery.OrderItemProjection> items = orderRepository.findOrderItemsByOrderId(orderId);
+        List<OrderQuery.OrderItemProjection> items = orderRepository.findOrderItemByOrderId(orderId);
 
         // 3. 주문 항목을 OrderItemDetail로 변환
         List<OrderInfo.OrderItemDetail> orderItems = items.stream()
-                .map(OrderInfo.OrderItemDetail::from)
+                .map(OrderQuery.OrderItemProjection::to)
                 .collect(Collectors.toList());
 
         // 4. OrderHistory 객체 생성 및 반환
@@ -71,10 +72,13 @@ public class OrderService {
                 .totalPrice(totalPrice)
                 .build();
 
+        // 저장
+        Order savedOrder = orderRepository.saveOrder(order);
+
         // 주문 항목 생성
         List<OrderItem> orderItems = items.stream()
                 .map(item -> OrderItem.builder()
-                        .orderId(order.getId())
+                        .orderId(savedOrder.getId())
                         .optionId(item.getOptionId())
                         .originalPrice(item.getPrice())
                         .quantity(item.getQuantity())
@@ -82,8 +86,6 @@ public class OrderService {
                         .build())
                 .toList();
 
-        // 저장
-        Order savedOrder = orderRepository.saveOrder(order);
         List<OrderItem> savedOrderItems = orderRepository.saveOrderItem(orderItems);
 
         return OrderInfo.OrderSummary.from(savedOrder, savedOrderItems);
@@ -98,17 +100,17 @@ public class OrderService {
     @Transactional(readOnly = true)
     public List<OrderInfo.OrderHistory> findOrdersByUserId(long userId) {
         // 1. 사용자의 주문 정보 조회
-        List<OrderQuery.OrderProjection> orders = orderRepository.findOrdersByUserId(userId);
+        List<Order> orders = orderRepository.findOrdersByUserId(userId);
 
         // 2. 각 주문에 대해 주문 항목을 조회하고, OrderHistory로 변환
         return orders.stream()
                 .map(order -> {
                     // 3. 주문 항목 조회
-                    List<OrderQuery.OrderItemProjection> items = orderRepository.findOrderItemsByOrderId(order.getOrderId());
+                    List<OrderQuery.OrderItemProjection> items = orderRepository.findOrderItemByOrderId(order.getId());
 
                     // 4. 주문 항목을 OrderItemDetail로 변환
                     List<OrderInfo.OrderItemDetail> orderItems = items.stream()
-                            .map(OrderInfo.OrderItemDetail::from)  // OrderItemProjection을 직접 변환
+                            .map(OrderQuery.OrderItemProjection::to)
                             .collect(Collectors.toList());
 
                     // 5. OrderHistory 객체 생성 및 반환
@@ -143,7 +145,7 @@ public class OrderService {
      * 결제가 취소된 주문에 대해 주문 상태를 취소 상태로 변경합니다.
      *
      * @param orderId 상태를 변경할 주문의 ID
-     * @throws BusinessException 주문이 존재하지 않을 경우 {@link BusinessError#ORDER_NOT_FOUND} 예외 발생
+     * @throws BusinessException 주문이 존재하지 않을 경우
      */
     @Transactional
     public void cancel(long orderId) {
