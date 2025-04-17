@@ -9,7 +9,11 @@ import lombok.*;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "product_option")
+@Table(name = "product_option",
+        indexes = {
+                @Index(name = "idx_product_option_product_id", columnList = "product_id")
+        }
+)
 public class ProductOption extends AuditableEntity {
 
     /**

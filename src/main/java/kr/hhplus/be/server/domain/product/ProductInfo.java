@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.domain.product;
 
-import kr.hhplus.be.server.infrastructure.product.ProductQuery;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,11 +18,11 @@ public final class ProductInfo {
         private final long price;
         private final List<Option> options;
 
-        public static Detail from(ProductQuery.DetailProjection projection, List<Option> options) {
+        public static Detail from(Product product, List<Option> options) {
             return Detail.builder()
-                    .productId(projection.getProductId())
-                    .name(projection.getName())
-                    .price(projection.getPrice())
+                    .productId(product.getId())
+                    .name(product.getName())
+                    .price(product.getPrice())
                     .options(options)
                     .build();
         }
@@ -36,15 +35,6 @@ public final class ProductInfo {
         private final String size;
         private final String color;
         private final long stockQuantity;
-
-        public static Option from(ProductQuery.OptionProjection projection) {
-            return Option.builder()
-                    .optionId(projection.getOptionId())
-                    .size(projection.getSize())
-                    .color(projection.getColor())
-                    .stockQuantity(projection.getStockQuantity())
-                    .build();
-        }
     }
 
     @Getter
@@ -53,14 +43,6 @@ public final class ProductInfo {
         private final long optionId;
         private final long price;
         private final long stockQuantity;
-
-        public static PriceOption from(ProductQuery.PriceOptionProjection projection) {
-            return PriceOption.builder()
-                    .optionId(projection.getOptionId())
-                    .price(projection.getPrice())
-                    .stockQuantity(projection.getStockQuantity())
-                    .build();
-        }
     }
 
     @Getter
@@ -69,14 +51,6 @@ public final class ProductInfo {
         private final long productId;
         private final String name;
         private final long salesCount;
-
-        public static TopSelling from(ProductQuery.TopSellingProjection projection) {
-            return TopSelling.builder()
-                    .productId(projection.getProductId())
-                    .name(projection.getName())
-                    .salesCount(projection.getSalesCount())
-                    .build();
-        }
     }
 
     @Getter
@@ -97,6 +71,14 @@ public final class ProductInfo {
         private long optionId;
         private long stockId;
         private long quantity;
+
+        public static OptionStock from(Stock stock) {
+            return OptionStock.builder()
+                    .optionId(stock.getProductOptionId())
+                    .stockId(stock.getId())
+                    .quantity(stock.getQuantity())
+                    .build();
+        }
     }
 
 }

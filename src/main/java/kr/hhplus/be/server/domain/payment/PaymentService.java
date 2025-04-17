@@ -19,6 +19,10 @@ public class PaymentService {
      */
     public PaymentInfo.PaymentSummary payment(PaymentCommand.Payment command) {
 
+        if(command.getAmount() < 0) {
+            throw new BusinessException(BusinessError.PAYMENT_AMOUNT_DECREASE_TOO_SMALL);
+        }
+
         // 1. 결제 엔티티 생성
         Payment entity = Payment.toEntity(command.getOrderId(), command.getAmount());
 

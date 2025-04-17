@@ -13,7 +13,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "orders")
+@Table(name = "orders",
+indexes = {
+        @Index(name = "idx_orders_orderDate", columnList = "orderDate"),
+        @Index(name = "idx_orders_status", columnList = "status"),
+})
 public class Order extends AuditableEntity {
 
     /**
@@ -65,7 +69,28 @@ public class Order extends AuditableEntity {
     }
 
     public enum Status {
-        PAYMENT_WAITING, CANCELLED, SUCCESS
+        PAYMENT_WAITING {
+            @Override
+            public boolean isDetermined() {
+                return false;
+            }
+        },
+
+        CANCELLED {
+            @Override
+            public boolean isDetermined() {
+                return true;
+            }
+        },
+
+        SUCCESS {
+            @Override
+            public boolean isDetermined() {
+                return true;
+            }
+        };
+
+        public abstract boolean isDetermined();
     }
 
 }

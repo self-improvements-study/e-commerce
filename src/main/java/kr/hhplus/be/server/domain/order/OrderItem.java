@@ -9,7 +9,12 @@ import lombok.*;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "order_item")
+@Table(name = "order_item",
+        indexes = {
+                @Index(name = "idx_order_item_order_id", columnList = "order_id"),
+                @Index(name = "idx_order_item_option_id", columnList = "option_id"),
+        }
+)
 public class OrderItem extends AuditableEntity {
 
     /**

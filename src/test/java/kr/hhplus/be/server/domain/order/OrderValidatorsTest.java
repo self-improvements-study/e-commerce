@@ -3,16 +3,21 @@ package kr.hhplus.be.server.domain.order;
 import kr.hhplus.be.server.common.exception.BusinessError;
 import kr.hhplus.be.server.common.exception.BusinessException;
 import kr.hhplus.be.server.domain.order.OrderCommand.Item;
+import kr.hhplus.be.server.domain.product.ProductQuery;
+import kr.hhplus.be.server.domain.product.ProductRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("OrderValidators 테스트")
@@ -20,6 +25,9 @@ class OrderValidatorsTest {
 
     @InjectMocks
     private OrderValidators validators;
+
+    @Mock
+    private ProductRepository productRepository;
 
     @Test
     @DisplayName("성공: 모든 조건을 만족하는 경우")
@@ -29,6 +37,13 @@ class OrderValidatorsTest {
                 Item.builder().optionId(1L).price(1000L).quantity(1).userCouponId(10L).discount(200L).build(),
                 Item.builder().optionId(2L).price(1500L).quantity(2).userCouponId(11L).discount(300L).build()
         );
+
+        when(productRepository.findProductOptionsById(anyList()))
+                .thenReturn(List.of(
+                        new ProductQuery.PriceOption(1L, 1000L, 10),
+                        new ProductQuery.PriceOption(2L, 1500L, 5)
+                ));
+
 
         // when & then
         assertThatCode(() -> validators.validateItems(items)).doesNotThrowAnyException();
@@ -45,6 +60,11 @@ class OrderValidatorsTest {
                     OrderCommand.Item.builder().optionId(1L).price(1000L).quantity(1).build(),
                     OrderCommand.Item.builder().optionId(1L).price(1000L).quantity(1).build()
             );
+
+            when(productRepository.findProductOptionsById(anyList()))
+                    .thenReturn(List.of(
+                            new ProductQuery.PriceOption(1L, 1000L, 10)
+                    ));
 
             assertThatThrownBy(() -> validators.validateItems(items))
                     .isInstanceOf(BusinessException.class)
