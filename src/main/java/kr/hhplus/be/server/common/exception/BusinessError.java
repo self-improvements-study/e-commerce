@@ -61,6 +61,7 @@ public enum BusinessError {
 
     PAYMENT_FAILED("P001", HttpStatus.INTERNAL_SERVER_ERROR, "결제에 실패하였습니다."),
     PAYMENT_NOT_FOUND("P002", HttpStatus.NOT_FOUND, "해당 결제내역이 존재하지 않습니다."),
+    PAYMENT_AMOUNT_DECREASE_TOO_SMALL("P003", HttpStatus.NOT_FOUND, "결제 금액은 0원 이상이어야 합니다."),
 
     // System ------------------------------------------------------------------------------------------------
 
