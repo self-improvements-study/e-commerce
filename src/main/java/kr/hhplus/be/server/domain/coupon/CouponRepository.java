@@ -11,6 +11,10 @@ public interface CouponRepository {
 
     Optional<Coupon> findCouponById(Long couponId);
 
+    Optional<Coupon> findCouponByIdForUpdate(Long id);
+
+    Coupon save(Coupon coupon);
+
     UserCoupon saveUserCoupon(UserCoupon userCoupon);
 
     boolean existsUserCoupon(Long userId, Long couponId);

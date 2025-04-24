@@ -25,7 +25,7 @@ public class CouponService {
      */
     @Transactional
     public CouponInfo.IssuedCoupon issueCoupon(CouponCommand.IssuedCoupon command) {
-        Coupon coupon = couponRepository.findCouponById(command.getCouponId())
+        Coupon coupon = couponRepository.findCouponByIdForUpdate(command.getCouponId())
                 .orElseThrow(() -> new BusinessException(BusinessError.COUPON_NOT_FOUND));
 
         // 재고 체크

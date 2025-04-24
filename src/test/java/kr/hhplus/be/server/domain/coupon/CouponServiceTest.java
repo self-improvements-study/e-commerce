@@ -60,7 +60,7 @@ class CouponServiceTest {
                     .couponId(couponId)
                     .build();
 
-            when(couponRepository.findCouponById(couponId)).thenReturn(Optional.of(coupon));
+            when(couponRepository.findCouponByIdForUpdate(couponId)).thenReturn(Optional.of(coupon));
             when(couponRepository.existsUserCoupon(userId, couponId)).thenReturn(false);
             when(couponRepository.saveUserCoupon(any(UserCoupon.class))).thenReturn(userCoupon);
 
@@ -84,7 +84,7 @@ class CouponServiceTest {
                     .couponId(couponId)
                     .build();
 
-            when(couponRepository.findCouponById(couponId)).thenReturn(Optional.empty());
+            when(couponRepository.findCouponByIdForUpdate(couponId)).thenReturn(Optional.empty());
 
             // expect
             assertThatThrownBy(() -> couponService.issueCoupon(command))
@@ -111,7 +111,7 @@ class CouponServiceTest {
                     .couponId(couponId)
                     .build();
 
-            when(couponRepository.findCouponById(couponId)).thenReturn(Optional.of(coupon));
+            when(couponRepository.findCouponByIdForUpdate(couponId)).thenReturn(Optional.of(coupon));
             when(couponRepository.existsUserCoupon(userId, couponId)).thenReturn(true);
 
             assertThatThrownBy(() -> couponService.issueCoupon(command))
