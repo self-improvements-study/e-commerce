@@ -2,9 +2,13 @@ package kr.hhplus.be.server.infrastructure.product;
 
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.persistence.LockModeType;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.product.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -44,6 +48,11 @@ public class ProductRepositoryImpl implements ProductRepository {
     @Override
     public List<Stock> findStocksByOptionId(List<Long> optionIds) {
         return stockJpaRepository.findByProductOptionIdIn(optionIds);
+    }
+
+    @Override
+    public List<Stock> findByProductOptionIdInWithLock(List<Long> optionIds) {
+        return stockJpaRepository.findByProductOptionIdInWithLock(optionIds);
     }
 
     @Override
@@ -93,5 +102,15 @@ public class ProductRepositoryImpl implements ProductRepository {
                 .join(product).on(productOption.productId.eq(product.id))
                 .where(productOption.id.in(optionIds))
                 .fetch();
+    }
+
+    @Override
+    public Product saveProduct(Product product) {
+        return productJpaRepository.save(product);
+    }
+
+    @Override
+    public List<ProductOption> saveProductOption(List<ProductOption> product) {
+        return productOptionJpaRepository.saveAll(product);
     }
 }

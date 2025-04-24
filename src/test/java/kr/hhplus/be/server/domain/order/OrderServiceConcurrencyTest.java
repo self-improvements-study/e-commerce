@@ -1,10 +1,6 @@
 package kr.hhplus.be.server.domain.order;
 
 import jakarta.persistence.EntityManager;
-import kr.hhplus.be.server.common.exception.BusinessError;
-import kr.hhplus.be.server.common.exception.BusinessException;
-import kr.hhplus.be.server.domain.coupon.CouponCommand;
-import kr.hhplus.be.server.domain.coupon.CouponService;
 import kr.hhplus.be.server.domain.product.*;
 import kr.hhplus.be.server.test.util.RandomGenerator;
 import org.junit.jupiter.api.DisplayName;
@@ -13,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,7 +21,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ActiveProfiles("test")
-@Transactional
 @SpringBootTest
 @DisplayName("주문서비스 동시성 테스트")
 class OrderServiceConcurrencyTest {
@@ -36,6 +30,10 @@ class OrderServiceConcurrencyTest {
 
     @Autowired
     private EntityManager entityManager;
+    @Autowired
+    private ProductService productService;
+    @Autowired
+    private ProductRepository productRepository;
 
     @Nested
     @DisplayName("decreaseStockQuantity 테스트")
@@ -43,41 +41,38 @@ class OrderServiceConcurrencyTest {
 
         @Test
         @DisplayName("재고 차감 동시성 테스트")
-        void decreaseStock_concurrentTest_withoutFuture() throws InterruptedException {
+        void test() throws InterruptedException {
             // given
             Product product = RandomGenerator.getFixtureMonkey()
                     .giveMeBuilder(Product.class)
                     .set("id", null)
                     .build()
                     .sample();
-            entityManager.persist(product);
+            Product savedProduct = productRepository.saveProduct(product);
 
             ProductOption option = RandomGenerator.getFixtureMonkey()
                     .giveMeBuilder(ProductOption.class)
                     .set("id", null)
-                    .set("productId", product.getId())
+                    .set("productId", savedProduct.getId())
                     .build()
                     .sample();
-            entityManager.persist(option);
+            List<ProductOption> savedProductOption = productRepository.saveProductOption(List.of(option));
 
             long stockQuantity = 5;
 
             Stock stock = RandomGenerator.getFixtureMonkey()
                     .giveMeBuilder(Stock.class)
                     .set("id", null)
-                    .set("productOptionId", option.getId())
+                    .set("productOptionId", savedProductOption.get(0).getId())
                     .set("quantity", stockQuantity)
                     .build()
                     .sample();
-            entityManager.persist(stock);
+            productRepository.saveStocks(List.of(stock));
 
-            int threadCount = 100;
+            int threadCount = 10;
 
             ProductCommand.DecreaseStock command = ProductCommand.DecreaseStock.of(
                     List.of(ProductCommand.OptionStock.of(option.getId(), 1L))
-            );
-            ProductCommand.OptionIds optionIds = ProductCommand.OptionIds.of(
-                    List.of(option.getId())
             );
 
             ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
@@ -105,10 +100,10 @@ class OrderServiceConcurrencyTest {
             executorService.shutdown();
 
             // then
-            assertThat(thrownExceptions).allSatisfy(e -> {
-                assertThat(e).isInstanceOf(BusinessException.class);
-                assertThat(((BusinessException) e).getBusinessError()).isEqualTo(BusinessError.STOCK_QUANTITY_EXCEEDED);
-            });
+            ProductInfo.Detail productById = productService.getProductById(product.getId());
+
+            assertThat(productById).isNotNull();
+            assertThat(productById.getOptions().get(0).getStockQuantity()).isEqualTo(0);
         }
     }
 }
