@@ -52,7 +52,7 @@ public class PointService {
 
     /**
      * 사용자 포인트를 차감합니다.
-     * 
+     *
      * 1. 사용자 포인트 조회
      * 2. 유효성 검사 (차감 가능 여부)
      * 3. 포인트 감소 후 저장
@@ -65,7 +65,7 @@ public class PointService {
      */
     @Transactional
     public PointInfo.Decrease decrease(long userId, long amount) {
-        Point point = pointRepository.findPointByUserId(userId)
+        Point point = pointRepository.findPointByUserIdForUpdate(userId)
                 .orElseThrow(() -> new BusinessException(BusinessError.NO_REGISTERED_USER));
 
         point.decrease(amount);

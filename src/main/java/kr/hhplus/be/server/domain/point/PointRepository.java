@@ -8,6 +8,8 @@ public interface PointRepository {
 
     Optional<Point> findPointByUserId(Long userId);
 
+    Optional<Point> findPointByUserIdForUpdate(Long userId);
+
     List<PointHistory> findPointHistoryByUserId(Long userId);
 
     Point save(Point point);
