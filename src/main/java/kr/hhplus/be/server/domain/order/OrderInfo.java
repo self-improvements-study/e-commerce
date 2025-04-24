@@ -39,7 +39,7 @@ public final class OrderInfo {
         private final String size;
         private final String color;
         private final Integer quantity;
-        private final long userCouponId;
+        private final Long userCouponId;
         private final long price;
     }
 
