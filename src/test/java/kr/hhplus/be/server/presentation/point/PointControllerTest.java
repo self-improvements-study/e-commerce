@@ -3,6 +3,8 @@ package kr.hhplus.be.server.presentation.point;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.hhplus.be.server.application.point.PointFacade;
 import kr.hhplus.be.server.application.point.PointResult;
+import kr.hhplus.be.server.common.exception.BusinessException;
+import kr.hhplus.be.server.common.web.ExceptionTranslator;
 import kr.hhplus.be.server.domain.point.PointHistory;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,6 +35,9 @@ class PointControllerTest {
 
     @MockitoBean
     private PointFacade pointFacade;
+
+    @MockitoBean
+    private ExceptionTranslator<BusinessException> exceptionTranslator;
 
     @Test
     @DisplayName("사용자 포인트 조회")

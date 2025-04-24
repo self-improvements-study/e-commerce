@@ -46,7 +46,7 @@ public enum BusinessError {
     COUPON_USAGE_NOT_ALLOWED("C007", HttpStatus.FORBIDDEN, "해당 쿠폰은 현재 사용할 수 없습니다."),
     INVALID_COUPON_QUANTITY("C008", HttpStatus.BAD_REQUEST, "차감 수량은 0보다 커야 합니다."),
     INVALID_DISCOUNT_PRICE("O009", HttpStatus.BAD_REQUEST, "할인 금액은 상품 금액보다 작아야 합니다."),
-    COUPON_NOT_USED("O010", HttpStatus.BAD_REQUEST, "할인 금액은 상품 금액보다 작아야 합니다."),
+    COUPON_NOT_USED("O010", HttpStatus.BAD_REQUEST, "해당 쿠폰은 사용되지 않았습니다."),
 
     // Order --------------------------------------------------------------------------------------------------
 
@@ -66,7 +66,8 @@ public enum BusinessError {
     // System ------------------------------------------------------------------------------------------------
 
     INTERNAL_SERVER_ERROR("C001", HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다."),
-    INVALID_REQUEST("C002", HttpStatus.BAD_REQUEST, "잘못된 요청입니다.")
+    INVALID_REQUEST("C002", HttpStatus.BAD_REQUEST, "잘못된 요청입니다."),
+    CONCURRENCY_FAILURE("C003", HttpStatus.CONFLICT, "동시 처리 중 오류가 발생했습니다.")
     ;
 
     private final String code;

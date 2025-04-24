@@ -2,6 +2,8 @@ package kr.hhplus.be.server.presentation.order;
 
 import kr.hhplus.be.server.application.order.OrderFacade;
 import kr.hhplus.be.server.application.order.OrderResult;
+import kr.hhplus.be.server.common.exception.BusinessException;
+import kr.hhplus.be.server.common.web.ExceptionTranslator;
 import kr.hhplus.be.server.domain.order.Order;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,6 +36,8 @@ class OrderControllerTest {
     @MockitoBean
     private OrderFacade orderFacade;
 
+    @MockitoBean
+    private ExceptionTranslator<BusinessException> exceptionTranslator;
 
     @Test
     @DisplayName("상품 주문")
@@ -55,7 +59,7 @@ class OrderControllerTest {
                                 .optionId(1L)
                                 .originalPrice(2500L)
                                 .quantity(2)
-                                .userCouponId(0)
+                                .userCouponId(0L)
                                 .build()
                 ))
                 .build();

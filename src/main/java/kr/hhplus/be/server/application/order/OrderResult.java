@@ -47,7 +47,7 @@ public final class OrderResult {
         private long optionId;
         private long originalPrice;
         private int quantity;
-        private long userCouponId;
+        private Long userCouponId;
 
         public static OrderItemSummary from(OrderInfo.OrderItemSummary orderItem) {
             return OrderItemSummary.builder()
