@@ -40,19 +40,23 @@ public final class CouponResult {
     public static class OwnedCoupon {
         private long userCouponId;
         private long couponId;
+        private long userId;
         private String couponName;
         private long discount;
         private LocalDateTime startedDate;
         private LocalDateTime endedDate;
+        private boolean used;
 
         public static OwnedCoupon from(CouponInfo.OwnedCoupon info) {
             return OwnedCoupon.builder()
                     .userCouponId(info.getUserCouponId())
                     .couponId(info.getCouponId())
+                    .userId(info.getUserId())
                     .couponName(info.getCouponName())
                     .discount(info.getDiscount())
                     .startedDate(info.getStartedDate())
                     .endedDate(info.getEndedDate())
+                    .used(info.isUsed())
                     .build();
         }
     }

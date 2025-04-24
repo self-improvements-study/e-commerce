@@ -2,7 +2,6 @@ package kr.hhplus.be.server.domain.coupon;
 
 import kr.hhplus.be.server.common.exception.BusinessError;
 import kr.hhplus.be.server.common.exception.BusinessException;
-import kr.hhplus.be.server.infrastructure.coupon.CouponQuery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,7 +57,7 @@ public class CouponService {
     @Transactional(readOnly = true)
     public List<CouponInfo.OwnedCoupon> findUserCoupons(long userId) {
         return couponRepository.findAllOwnedCouponsByUserId(userId).stream()
-                .map(CouponInfo.OwnedCoupon::from)
+                .map(CouponQuery.OwnedCoupon::to)
                 .toList();
     }
 
@@ -72,11 +71,11 @@ public class CouponService {
     public List<CouponInfo.OwnedCoupon> findUserCouponsById(CouponCommand.FindUserCoupons command) {
         List<Long> userCouponIds = command.getUserCouponIds();
 
-        List<CouponQuery.OwnedCouponProjection> projections =
+        List<CouponQuery.OwnedCoupon> projections =
                 couponRepository.findUserCouponsByIds(userCouponIds);
 
         return projections.stream()
-                .map(CouponInfo.OwnedCoupon::from)
+                .map(CouponQuery.OwnedCoupon::to)
                 .toList();
     }
 
@@ -84,47 +83,50 @@ public class CouponService {
     /**
      * 사용자가 쿠폰을 사용합니다.
      *
-     * 1. 요청된 유저 쿠폰 ID로 상세 정보 조회
-     * 2. 유효성 검사 (모든 쿠폰이 존재해야 함)
-     * 3. 사용 가능한 기간인지 검사
-     * 4. 쿠폰 사용 처리 및 저장
-     *
      * @param command 쿠폰 사용 요청 정보 (보유한 유저 쿠폰 ID 목록 포함)
      * @throws BusinessException 쿠폰 없음, 유효하지 않은 사용 기간, 이미 사용된 쿠폰 등 예외 발생
      */
     @Transactional
     public void use(CouponCommand.Use command) {
+        // 사용하려는 쿠폰 ID만 추출 (중복 제거)
         List<Long> useCouponIds = command.getOwnedCoupons()
                 .stream()
                 .map(CouponCommand.OwnedCoupon::getUserCouponId)
                 .distinct()
                 .toList();
 
-        List<CouponInfo.Detail> details = couponRepository.findUserCouponDetailsById(useCouponIds).stream()
-                .map(CouponInfo.Detail::from)
+        // 쿠폰 상세 정보 조회
+        List<CouponInfo.OwnedCoupon> details = couponRepository.findUserCouponsByIds(useCouponIds).stream()
+                .map(CouponQuery.OwnedCoupon::to)
                 .toList();
 
+        // 쿠폰이 존재하지 않거나 일부만 존재하면 예외 발생
         if (CollectionUtils.isEmpty(details) || details.size() != useCouponIds.size()) {
             throw new BusinessException(BusinessError.USER_COUPON_NOT_FOUND);
         }
 
+        // 실제 UserCoupon 엔티티 조회 (상태 변경을 위해)
         List<UserCoupon> userCoupons = couponRepository.findUserCouponsById(useCouponIds);
         if (CollectionUtils.isEmpty(userCoupons) || userCoupons.size() != useCouponIds.size()) {
             throw new BusinessException(BusinessError.USER_COUPON_NOT_FOUND);
         }
 
         LocalDateTime now = LocalDateTime.now();
+
         for (int i = 0; i < details.size(); i++) {
-            CouponInfo.Detail detail = details.get(i);
+            CouponInfo.OwnedCoupon detail = details.get(i);
             UserCoupon userCoupon = userCoupons.get(i);
 
+            // 쿠폰이 아직 시작되지 않았거나, 이미 기간이 지난 경우 예외
             if (detail.getStartedDate().isAfter(now) || now.isAfter(detail.getEndedDate())) {
                 throw new BusinessException(BusinessError.COUPON_EXPIRED);
             }
 
+            // 쿠폰 사용 처리 (상태 변경)
             userCoupon.use();
         }
 
+        // 변경된 UserCoupon 저장 (사용 상태 반영)
         couponRepository.saveUserCoupons(userCoupons);
     }
 
@@ -151,7 +153,4 @@ public class CouponService {
 
         couponRepository.saveUserCoupons(userCoupons);
     }
-
-
-
 }

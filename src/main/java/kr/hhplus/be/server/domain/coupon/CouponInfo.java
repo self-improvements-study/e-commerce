@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.domain.coupon;
 
-import kr.hhplus.be.server.infrastructure.coupon.CouponQuery;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -38,43 +37,12 @@ public final class CouponInfo {
     public static class OwnedCoupon {
         private long userCouponId;
         private long couponId;
+        private long userId;
         private String couponName;
         private long discount;
         private LocalDateTime startedDate;
         private LocalDateTime endedDate;
-
-        public static OwnedCoupon from(CouponQuery.OwnedCouponProjection projection) {
-            return OwnedCoupon.builder()
-                    .userCouponId(projection.getUserCouponId())
-                    .couponId(projection.getCouponId())
-                    .couponName(projection.getCouponName())
-                    .discount(projection.getDiscount())
-                    .startedDate(projection.getStartedDate())
-                    .endedDate(projection.getEndedDate())
-                    .build();
-        }
-    }
-
-    @Getter
-    @Builder
-    public static class Detail {
-        private long couponId;
-        private long userId;
-        private long userCouponId;
-        private LocalDateTime startedDate;
-        private LocalDateTime endedDate;
         private boolean used;
 
-        public static Detail from(CouponQuery.DetailProjection projection) {
-            return Detail.builder()
-                    .couponId(projection.getCouponId())
-                    .userId(projection.getUserId())
-                    .userCouponId(projection.getUserCouponId())
-                    .startedDate(projection.getStartedDate())
-                    .endedDate(projection.getEndedDate())
-                    .used(projection.isUsed())
-                    .build();
-        }
     }
-
-}
+    }

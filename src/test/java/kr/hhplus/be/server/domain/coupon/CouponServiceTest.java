@@ -2,7 +2,6 @@ package kr.hhplus.be.server.domain.coupon;
 
 import kr.hhplus.be.server.common.exception.BusinessError;
 import kr.hhplus.be.server.common.exception.BusinessException;
-import kr.hhplus.be.server.infrastructure.coupon.CouponQuery;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -128,7 +127,16 @@ class CouponServiceTest {
         @DisplayName("사용자의 모든 쿠폰을 조회한다")
         void success1() {
             long userId = 1L;
-            CouponQuery.OwnedCouponProjection projection = mock(CouponQuery.OwnedCouponProjection.class);
+            CouponQuery.OwnedCoupon projection = new CouponQuery.OwnedCoupon(
+                    100L,
+                    10L,
+                    userId,
+                    "할인 쿠폰",
+                    1000L,
+                    LocalDateTime.of(2025, 1, 1, 0, 0),
+                    LocalDateTime.of(2025, 12, 31, 23, 59),
+                    false
+            );
             when(couponRepository.findAllOwnedCouponsByUserId(userId))
                     .thenReturn(List.of(projection));
 
@@ -145,8 +153,27 @@ class CouponServiceTest {
         @DisplayName("ID 목록에 해당하는 사용자 쿠폰 조회")
         void success1() {
             List<Long> ids = List.of(1L, 2L);
-            CouponQuery.OwnedCouponProjection projection1 = mock(CouponQuery.OwnedCouponProjection.class);
-            CouponQuery.OwnedCouponProjection projection2 = mock(CouponQuery.OwnedCouponProjection.class);
+            CouponQuery.OwnedCoupon projection1 = new CouponQuery.OwnedCoupon(
+                    1L,
+                    10L,
+                    1L,
+                    "10% 할인 쿠폰",
+                    1000L,
+                    LocalDateTime.of(2025, 1, 1, 0, 0),
+                    LocalDateTime.of(2025, 12, 31, 23, 59),
+                    false
+            );
+
+            CouponQuery.OwnedCoupon projection2 = new CouponQuery.OwnedCoupon(
+                    2L,
+                    20L,
+                    1L,
+                    "20% 할인 쿠폰",
+                    2000L,
+                    LocalDateTime.of(2025, 2, 1, 0, 0),
+                    LocalDateTime.of(2025, 12, 31, 23, 59),
+                    true
+            );
 
             when(couponRepository.findUserCouponsByIds(ids)).thenReturn(List.of(projection1, projection2));
 
@@ -166,13 +193,16 @@ class CouponServiceTest {
             // given
             long userCouponId = 1L;
 
-            CouponQuery.DetailProjection projection = mock(CouponQuery.DetailProjection.class);
-            when(projection.getUserCouponId()).thenReturn(userCouponId);
-            when(projection.getCouponId()).thenReturn(101L);
-            when(projection.getUserId()).thenReturn(1L);
-            when(projection.getStartedDate()).thenReturn(LocalDateTime.now().minusDays(1));
-            when(projection.getEndedDate()).thenReturn(LocalDateTime.now().plusDays(1));
-            when(projection.isUsed()).thenReturn(false);
+            CouponQuery.OwnedCoupon projection = new CouponQuery.OwnedCoupon(
+                    userCouponId,
+                    101L,
+                    1L,
+                    "10% 할인 쿠폰",
+                    1000L,
+                    LocalDateTime.now().minusDays(1),
+                    LocalDateTime.now().plusDays(1),
+                    false
+            );
 
             UserCoupon userCoupon = UserCoupon.builder()
                     .id(userCouponId)
@@ -181,7 +211,7 @@ class CouponServiceTest {
 
             List<Long> userCouponIds = List.of(userCouponId);
 
-            when(couponRepository.findUserCouponDetailsById(userCouponIds)).thenReturn(List.of(projection));
+            when(couponRepository.findUserCouponsByIds(userCouponIds)).thenReturn(List.of(projection));
             when(couponRepository.findUserCouponsById(userCouponIds)).thenReturn(List.of(userCoupon));
 
             // when
@@ -201,7 +231,7 @@ class CouponServiceTest {
             // given
             long userCouponId = 1L;
 
-            when(couponRepository.findUserCouponDetailsById(List.of(userCouponId)))
+            when(couponRepository.findUserCouponsByIds(List.of(userCouponId)))
                     .thenReturn(List.of());
 
             CouponCommand.Use command = CouponCommand.Use.builder()
@@ -220,16 +250,19 @@ class CouponServiceTest {
         @DisplayName("이미 사용한 쿠폰이면 예외 발생")
         void failure2() {
             long userCouponId = 1L;
-            CouponQuery.DetailProjection projection = mock(CouponQuery.DetailProjection.class);
 
-            when(projection.getUserCouponId()).thenReturn(userCouponId);
-            when(projection.getCouponId()).thenReturn(101L);
-            when(projection.getUserId()).thenReturn(1L);
-            when(projection.getStartedDate()).thenReturn(LocalDateTime.now().minusDays(1));
-            when(projection.getEndedDate()).thenReturn(LocalDateTime.now().plusDays(1));
-            when(projection.isUsed()).thenReturn(true); // 이미 사용함
+            CouponQuery.OwnedCoupon projection = new CouponQuery.OwnedCoupon(
+                    userCouponId,
+                    101L,
+                    1L,
+                    "10% 할인 쿠폰",
+                    1000L,
+                    LocalDateTime.now().minusDays(1),
+                    LocalDateTime.now().plusDays(1),
+                    false
+            );
 
-            when(couponRepository.findUserCouponDetailsById(List.of(userCouponId)))
+            when(couponRepository.findUserCouponsByIds(List.of(userCouponId)))
                     .thenReturn(List.of(projection));
 
             CouponCommand.Use command = CouponCommand.Use.builder()
@@ -248,21 +281,24 @@ class CouponServiceTest {
         @DisplayName("쿠폰 사용 기간이 아니라면 예외 발생")
         void failure3() {
             long userCouponId = 1L;
-            CouponQuery.DetailProjection projection = mock(CouponQuery.DetailProjection.class);
 
-            when(projection.getUserCouponId()).thenReturn(userCouponId);
-            when(projection.getCouponId()).thenReturn(101L);
-            when(projection.getUserId()).thenReturn(1L);
-            when(projection.getStartedDate()).thenReturn(LocalDateTime.now().plusDays(1));
-            when(projection.getEndedDate()).thenReturn(LocalDateTime.now().plusDays(10));
-            when(projection.isUsed()).thenReturn(false);
+            CouponQuery.OwnedCoupon projection = new CouponQuery.OwnedCoupon(
+                    userCouponId,
+                    101L,
+                    1L,
+                    "10% 할인 쿠폰",
+                    1000L,
+                    LocalDateTime.now().plusDays(1),
+                    LocalDateTime.now().plusDays(1),
+                    false
+            );
 
             UserCoupon userCoupon = UserCoupon.builder()
                     .id(userCouponId)
                     .used(false)
                     .build();
 
-            when(couponRepository.findUserCouponDetailsById(List.of(userCouponId)))
+            when(couponRepository.findUserCouponsByIds(List.of(userCouponId)))
                     .thenReturn(List.of(projection));
             when(couponRepository.findUserCouponsById(List.of(userCouponId)))
                     .thenReturn(List.of(userCoupon));

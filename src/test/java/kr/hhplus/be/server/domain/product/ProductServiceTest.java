@@ -2,7 +2,6 @@ package kr.hhplus.be.server.domain.product;
 
 import kr.hhplus.be.server.common.exception.BusinessError;
 import kr.hhplus.be.server.common.exception.BusinessException;
-import kr.hhplus.be.server.infrastructure.product.ProductQuery;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -11,6 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,16 +37,20 @@ class ProductServiceTest {
         @DisplayName("인기 상품을 정상적으로 조회한다.")
         void success1() {
             // given
-            ProductQuery.TopSellingProjection projection = mock(ProductQuery.TopSellingProjection.class);
-            when(projection.getProductId()).thenReturn(1L);
-            when(projection.getName()).thenReturn("인기상품");
-            when(projection.getSalesCount()).thenReturn(10L);
+            ProductQuery.TopSelling projection = new ProductQuery.TopSelling(
+                    1L,
+                    "인기상품",
+                    10L
+            );
 
-            when(productRepository.findTopSellingProducts())
+            LocalDateTime daysAgo = LocalDateTime.now().minusDays(3);
+            long limit = 5;
+
+            when(productRepository.findTopSellingProducts(daysAgo, limit))
                     .thenReturn(List.of(projection));
 
             // when
-            List<ProductInfo.TopSelling> results = productService.getTopSellingProducts();
+            List<ProductInfo.TopSelling> results = productService.getTopSellingProducts(daysAgo, limit);
 
             // then
             assertThat(results).hasSize(1);
@@ -67,18 +71,20 @@ class ProductServiceTest {
             // given
             long productId = 1L;
 
-            ProductQuery.DetailProjection detail = mock(ProductQuery.DetailProjection.class);
-            when(detail.getProductId()).thenReturn(productId);
-            when(detail.getName()).thenReturn("상품A");
-            when(detail.getPrice()).thenReturn(10000L);
+            Product product = Product.builder()
+                    .id(productId)
+                    .name("상품A")
+                    .price(10000L)
+                    .build();
 
-            ProductQuery.OptionProjection option = mock(ProductQuery.OptionProjection.class);
-            when(option.getOptionId()).thenReturn(101L);
-            when(option.getSize()).thenReturn("M");
-            when(option.getColor()).thenReturn("Black");
-            when(option.getStockQuantity()).thenReturn(30L);
+            ProductQuery.Option option = new ProductQuery.Option(
+                    101L,
+                    "M",
+                    "Black",
+                    30L
+            );
 
-            when(productRepository.findProductDetailById(productId)).thenReturn(Optional.of(detail));
+            when(productRepository.findProductById(productId)).thenReturn(Optional.of(product));
             when(productRepository.findProductOptionsByProductId(productId)).thenReturn(List.of(option));
 
             // when
@@ -97,7 +103,7 @@ class ProductServiceTest {
         void failure1() {
             // given
             long productId = 999L;
-            when(productRepository.findProductDetailById(productId)).thenReturn(Optional.empty());
+            when(productRepository.findProductById(productId)).thenReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> productService.getProductById(productId))
@@ -216,15 +222,17 @@ class ProductServiceTest {
             // given
             List<Long> optionIds = List.of(101L, 102L);
 
-            ProductQuery.PriceOptionProjection option1 = mock(ProductQuery.PriceOptionProjection.class);
-            when(option1.getOptionId()).thenReturn(101L);
-            when(option1.getPrice()).thenReturn(10000L);
-            when(option1.getStockQuantity()).thenReturn(5L);
+            ProductQuery.PriceOption option1 = new ProductQuery.PriceOption(
+                    101L,
+                    10000L,
+                    5L
+            );
 
-            ProductQuery.PriceOptionProjection option2 = mock(ProductQuery.PriceOptionProjection.class);
-            when(option2.getOptionId()).thenReturn(102L);
-            when(option2.getPrice()).thenReturn(20000L);
-            when(option2.getStockQuantity()).thenReturn(10L);
+            ProductQuery.PriceOption option2 = new ProductQuery.PriceOption(
+                    102L,
+                    20000L,
+                    10L
+            );
 
             when(productRepository.findProductOptionsById(optionIds))
                     .thenReturn(List.of(option1, option2));
