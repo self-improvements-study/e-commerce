@@ -14,10 +14,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "orders",
-indexes = {
-        @Index(name = "idx_orders_orderDate", columnList = "orderDate"),
-        @Index(name = "idx_orders_status", columnList = "status"),
-})
+        indexes = {
+                @Index(name = "idx_orders_orderDate", columnList = "orderDate"),
+                @Index(name = "idx_orders_status", columnList = "status"),
+        })
 public class Order extends AuditableEntity {
 
     /**
@@ -51,6 +51,9 @@ public class Order extends AuditableEntity {
      */
     @Column(name = "total_price", nullable = false)
     private Long totalPrice;
+
+    @Version
+    private Long version;
 
     public void success() {
         // 현재 상태가 '결제 대기'가 아니면 성공 처리할 수 없으므로 예외 발생
