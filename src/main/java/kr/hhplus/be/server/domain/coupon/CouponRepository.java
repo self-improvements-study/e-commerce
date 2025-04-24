@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.domain.coupon;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,4 +23,6 @@ public interface CouponRepository {
     List<CouponQuery.OwnedCoupon> findAllOwnedCouponsByUserId(long userId);
 
     List<CouponQuery.OwnedCoupon> findUserCouponsByIds(List<Long> userCouponIds);
+
+    List<UserCoupon> findUserCouponsByExpiredDate(LocalDateTime expiredDate);
 }

@@ -54,6 +54,9 @@ public class Coupon extends AuditableEntity {
     @Column(name = "ended_date", nullable = false)
     private LocalDateTime endedDate;
 
+    @Version
+    private Long version;
+
     public void decrease(long quantity) {
 
         if (quantity <= 0) {
