@@ -12,6 +12,8 @@ public interface ProductRepository {
 
     List<Stock> findStocksByOptionId(List<Long> optionIds);
 
+    List<Stock> findByProductOptionIdInWithLock(List<Long> optionIds);
+
     List<Stock> saveStocks(List<Stock> stocks);
 
     Optional<Product> findProductById(long productId);
@@ -19,4 +21,7 @@ public interface ProductRepository {
     List<ProductQuery.TopSelling> findTopSellingProducts(LocalDateTime daysAgo, long limit);
 
     List<ProductQuery.PriceOption> findProductOptionsById(List<Long> optionIds);
+
+    Product saveProduct(Product product);
+    List<ProductOption> saveProductOption(List<ProductOption> product);
 }

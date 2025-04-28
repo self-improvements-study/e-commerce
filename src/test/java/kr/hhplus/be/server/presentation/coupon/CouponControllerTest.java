@@ -3,6 +3,9 @@ package kr.hhplus.be.server.presentation.coupon;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.hhplus.be.server.application.coupon.CouponFacade;
 import kr.hhplus.be.server.application.coupon.CouponResult;
+import kr.hhplus.be.server.common.exception.BusinessError;
+import kr.hhplus.be.server.common.exception.BusinessException;
+import kr.hhplus.be.server.common.web.ExceptionTranslator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +32,9 @@ class CouponControllerTest {
 
     @MockitoBean
     private CouponFacade couponFacade;
+
+    @MockitoBean
+    private ExceptionTranslator<BusinessException> exceptionTranslator;
 
     @Autowired
     private ObjectMapper objectMapper;

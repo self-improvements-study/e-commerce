@@ -3,6 +3,8 @@ package kr.hhplus.be.server.presentation.payment;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.hhplus.be.server.application.payment.PaymentFacade;
 import kr.hhplus.be.server.application.payment.PaymentResult;
+import kr.hhplus.be.server.common.exception.BusinessException;
+import kr.hhplus.be.server.common.web.ExceptionTranslator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +32,8 @@ class PaymentControllerTest {
     @MockitoBean
     private PaymentFacade paymentFacade;
 
+    @MockitoBean
+    private ExceptionTranslator<BusinessException> exceptionTranslator;
 
     @Test
     @DisplayName("주문 결제")

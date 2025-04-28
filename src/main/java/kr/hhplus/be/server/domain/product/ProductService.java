@@ -131,7 +131,7 @@ public class ProductService {
                 .toList();
 
         // DB에서 옵션 ID에 해당하는 재고 리스트 조회
-        List<Stock> stocks = productRepository.findStocksByOptionId(optionIds);
+        List<Stock> stocks = productRepository.findByProductOptionIdInWithLock(optionIds);
 
         // 재고가 없거나 개수가 일치하지 않으면 예외 발생 (재고 조회 실패)
         if (CollectionUtils.isEmpty(stocks) || stocks.size() != optionIds.size()) {

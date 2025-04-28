@@ -2,6 +2,7 @@ package kr.hhplus.be.server.presentation.product;
 
 import kr.hhplus.be.server.application.product.ProductFacade;
 import kr.hhplus.be.server.application.product.ProductResult;
+import kr.hhplus.be.server.common.web.Logged;
 import kr.hhplus.be.server.config.swagger.api.ProductApi;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,10 +27,12 @@ public class ProductController implements ProductApi {
     }
 
     // 판매 우수 상품 조회
+    @Logged(threshold = 200)
     @GetMapping("/top-sellers")
     public List<ProductResponse.TopSelling> findTopSellingProducts() {
         List<ProductResult.TopSelling> result = productFacade.findTopSellingProducts();
         return ProductResponse.TopSelling.from(result);
 
     }
+
 }

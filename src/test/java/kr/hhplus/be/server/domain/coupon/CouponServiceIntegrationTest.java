@@ -276,6 +276,7 @@ class CouponServiceIntegrationTest {
                     .giveMeBuilder(Coupon.class)
                     .set("id", null)
                     .set("quantity", RandomGenerator.nextLong(1, 10))
+                    .set("endedDate", LocalDateTime.now().plusDays(3))
                     .build()
                     .sample();
             entityManager.persist(coupon);
@@ -297,7 +298,7 @@ class CouponServiceIntegrationTest {
             // then
             assertThatThrownBy(() -> sut.use(command))
                     .isInstanceOf(BusinessException.class)
-                    .hasMessage(BusinessError.COUPON_EXPIRED.getMessage());
+                    .hasMessage(BusinessError.COUPON_ALREADY_USED.getMessage());
         }
     }
 
@@ -346,7 +347,7 @@ class CouponServiceIntegrationTest {
             CouponInfo.OwnedCoupon ownedCoupon1 = userCouponsById.get(0);
 
             assertThat(userCouponsById).hasSize(1);
-            assertThat(ownedCoupon1.getCouponId()).isEqualTo(userCoupon.getId());
+            assertThat(ownedCoupon1.getUserCouponId()).isEqualTo(userCoupon.getId());
             assertThat(ownedCoupon1.isUsed()).isFalse();
         }
 

@@ -34,6 +34,9 @@ public class Point extends AuditableEntity {
     @Column(name = "balance", nullable = false)
     private Long balance;
 
+    @Version
+    private Long version;
+
     private static final long MAX_POINT = 1_000_000L;
 
     public void increase(long amount) {

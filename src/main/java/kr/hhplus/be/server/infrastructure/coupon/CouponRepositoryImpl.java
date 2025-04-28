@@ -5,6 +5,7 @@ import kr.hhplus.be.server.domain.coupon.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,6 +33,16 @@ public class CouponRepositoryImpl implements CouponRepository {
     @Override
     public Optional<Coupon> findCouponById(Long couponId) {
         return couponJpaRepository.findById(couponId);
+    }
+
+    @Override
+    public Optional<Coupon> findCouponByIdForUpdate(Long id) {
+        return couponJpaRepository.findCouponByUserIdForUpdate(id);
+    }
+
+    @Override
+    public Coupon save(Coupon coupon) {
+        return couponJpaRepository.save(coupon);
     }
 
     @Override
@@ -82,5 +93,10 @@ public class CouponRepositoryImpl implements CouponRepository {
                 .on(coupon.id.eq(userCoupon.couponId))
                 .where(userCoupon.id.in(userCouponIds))
                 .fetch();
+    }
+
+    @Override
+    public List<UserCoupon> findUserCouponsByExpiredDate(LocalDateTime expiredDate) {
+        return userCouponJpaRepository.findExpiredUserCoupons(expiredDate);
     }
 }

@@ -180,7 +180,7 @@ class ProductServiceIntegrationTest {
                     .sample();
             entityManager.persist(option);
 
-            long stockQuantity = 10L;
+            long stockQuantity = 5L;
 
             Stock stock = RandomGenerator.getFixtureMonkey()
                     .giveMeBuilder(Stock.class)
@@ -191,7 +191,7 @@ class ProductServiceIntegrationTest {
                     .sample();
             entityManager.persist(stock);
 
-            long quantity = RandomGenerator.nextLong(10, 100);
+            long quantity = RandomGenerator.nextLong(11, 100);
 
             ProductCommand.DecreaseStock command = new ProductCommand.DecreaseStock(
                     List.of(new ProductCommand.OptionStock(option.getId(), quantity))

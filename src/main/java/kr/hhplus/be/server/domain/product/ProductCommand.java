@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+import static java.util.Comparator.comparing;
+
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ProductCommand {
 
@@ -29,7 +31,9 @@ public final class ProductCommand {
 
         public static DecreaseStock of(List<OptionStock> optionStocks) {
             return DecreaseStock.builder()
-                    .optionStocks(optionStocks)
+                    .optionStocks(optionStocks.stream()
+                            .sorted(comparing(OptionStock::getOptionId))
+                            .toList())
                     .build();
         }
 

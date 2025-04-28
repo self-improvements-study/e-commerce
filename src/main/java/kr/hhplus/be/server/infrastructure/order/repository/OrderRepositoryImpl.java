@@ -5,6 +5,7 @@ import kr.hhplus.be.server.domain.order.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,4 +59,10 @@ public class OrderRepositoryImpl implements OrderRepository {
                 .where(orderItem.orderId.eq(orderId))
                 .fetch();
     }
+
+    @Override
+    public List<Order> findExpiredOrders(LocalDateTime standardDateTime) {
+        return orderJpaRepository.findExpiredOrders(standardDateTime);
+    }
+
 }

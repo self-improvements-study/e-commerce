@@ -31,11 +31,6 @@ public class PointService {
     /**
      * 사용자 포인트를 충전합니다.
      *
-     * 1. 사용자 포인트 조회
-     * 2. 유효성 검사 (충전 가능 여부)
-     * 3. 포인트 증가 후 저장
-     * 4. 포인트 충전 이력 저장
-     *
      * @param userId 사용자 ID
      * @param amount 충전할 포인트 금액
      * @return 충전 후 포인트 정보
@@ -70,7 +65,7 @@ public class PointService {
      */
     @Transactional
     public PointInfo.Decrease decrease(long userId, long amount) {
-        Point point = pointRepository.findPointByUserId(userId)
+        Point point = pointRepository.findPointByUserIdForUpdate(userId)
                 .orElseThrow(() -> new BusinessException(BusinessError.NO_REGISTERED_USER));
 
         point.decrease(amount);

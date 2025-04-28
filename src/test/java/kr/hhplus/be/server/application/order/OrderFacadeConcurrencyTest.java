@@ -1,6 +1,7 @@
-package kr.hhplus.be.server.domain.order;
+package kr.hhplus.be.server.application.order;
 
-import jakarta.persistence.EntityManager;
+import kr.hhplus.be.server.domain.order.OrderInfo;
+import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.product.*;
 import kr.hhplus.be.server.test.util.RandomGenerator;
 import org.junit.jupiter.api.DisplayName;
@@ -22,30 +23,33 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ActiveProfiles("test")
 @SpringBootTest
-@DisplayName("주문서비스 동시성 테스트")
-class OrderServiceConcurrencyTest {
+@DisplayName("주문 파사드 동시성 테스트")
+class OrderFacadeConcurrencyTest {
 
     @Autowired
-    ProductService sut;
+    private OrderFacade orderFacade;
 
     @Autowired
-    private EntityManager entityManager;
+    private OrderService orderService;
+
     @Autowired
     private ProductService productService;
+
     @Autowired
     private ProductRepository productRepository;
 
     @Nested
-    @DisplayName("decreaseStockQuantity 테스트")
-    class decreaseStockQuantityTest {
+    @DisplayName("order 테스트")
+    class OrderTest {
 
         @Test
-        @DisplayName("재고 차감 동시성 테스트")
+        @DisplayName("주문 동시성 테스트")
         void test() throws InterruptedException {
             // given
             Product product = RandomGenerator.getFixtureMonkey()
                     .giveMeBuilder(Product.class)
                     .set("id", null)
+                    .set("price", 10000L)
                     .build()
                     .sample();
             Product savedProduct = productRepository.saveProduct(product);
@@ -69,27 +73,32 @@ class OrderServiceConcurrencyTest {
                     .sample();
             productRepository.saveStocks(List.of(stock));
 
-            int threadCount = 10;
+            OrderCriteria.Item item = OrderCriteria.Item.builder()
+                    .optionId(option.getId())
+                    .quantity(1)
+                    .build();
 
-            ProductCommand.DecreaseStock command = ProductCommand.DecreaseStock.of(
-                    List.of(ProductCommand.OptionStock.of(option.getId(), 1L))
-            );
+            long userId = 1L;
+            OrderCriteria.Detail detail = OrderCriteria.Detail.builder()
+                    .userId(userId)
+                    .items(List.of(item))
+                    .build();
+
+            int threadCount = 5;
 
             ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
             CountDownLatch latch = new CountDownLatch(threadCount);
             AtomicInteger successCount = new AtomicInteger(0);
             AtomicInteger failureCount = new AtomicInteger(0);
-            List<Throwable> thrownExceptions = Collections.synchronizedList(new ArrayList<>());
 
             // when
             for (int i = 0; i < threadCount; i++) {
                 executorService.execute(() -> {
                     try {
-                        sut.decreaseStockQuantity(command);
-                        successCount.incrementAndGet(); // 성공한 요청 카운트
+                        orderFacade.order(detail);
+                        successCount.incrementAndGet();
                     } catch (Throwable t) {
-                        failureCount.incrementAndGet(); // 실패한 요청 카운트
-                        thrownExceptions.add(t); // 예외 저장
+                        failureCount.incrementAndGet();
                     } finally {
                         latch.countDown();
                     }
@@ -100,10 +109,14 @@ class OrderServiceConcurrencyTest {
             executorService.shutdown();
 
             // then
+            assertThat(successCount.get()).isEqualTo(threadCount);
+
             ProductInfo.Detail productById = productService.getProductById(product.getId());
+            List<OrderInfo.OrderHistory> byUserId = orderService.findOrdersByUserId(userId);
 
             assertThat(productById).isNotNull();
             assertThat(productById.getOptions().get(0).getStockQuantity()).isEqualTo(0);
+            assertThat(byUserId).hasSize(threadCount);
         }
     }
 }
