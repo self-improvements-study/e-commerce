@@ -3,8 +3,10 @@ package kr.hhplus.be.server.domain.coupon;
 import kr.hhplus.be.server.common.exception.BusinessError;
 import kr.hhplus.be.server.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
@@ -15,6 +17,8 @@ import java.util.List;
 public class CouponService {
 
     private final CouponRepository couponRepository;
+
+    private final TransactionTemplate transactionTemplate;
 
     /**
      * 사용자가 쿠폰을 발급받습니다.
@@ -152,5 +156,17 @@ public class CouponService {
         userCoupons.forEach(UserCoupon::cancel);
 
         couponRepository.saveUserCoupons(userCoupons);
+    }
+
+    @Scheduled(cron = "0 0 0 * * ?")  // 매일 자정에 실행
+    public void expireCoupons() {
+        LocalDateTime now = LocalDateTime.now();
+
+        List<UserCoupon> expiredCoupons = couponRepository.findUserCouponsByExpiredDate(now);
+
+        expiredCoupons.forEach(coupon -> transactionTemplate.execute(status -> {
+            coupon.use();
+            return couponRepository.saveUserCoupon(coupon);
+        }));
     }
 }
