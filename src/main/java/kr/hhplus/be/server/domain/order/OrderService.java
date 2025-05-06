@@ -163,7 +163,6 @@ public class OrderService {
         orderRepository.saveOrder(order);
     }
 
-    @Scheduled(fixedRate = 120000)
     public void expireOrders() {
         LocalDateTime expirableDateTime = LocalDateTime.now().minusMinutes(5);
 

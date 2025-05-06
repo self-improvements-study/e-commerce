@@ -158,7 +158,6 @@ public class CouponService {
         couponRepository.saveUserCoupons(userCoupons);
     }
 
-    @Scheduled(cron = "0 0 0 * * ?")  // 매일 자정에 실행
     public void expireCoupons() {
         LocalDateTime now = LocalDateTime.now();
 
