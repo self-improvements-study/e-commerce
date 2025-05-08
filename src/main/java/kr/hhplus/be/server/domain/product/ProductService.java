@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -168,10 +168,12 @@ public class ProductService {
                 .optionStocks(results)
                 .build();
     }
+
     // 인기 상품 조회
     @Transactional(readOnly = true)
     public List<ProductInfo.TopSelling> getTopSellingProducts(LocalDateTime daysAgo, long limit) {
 
+    public List<ProductInfo.TopSelling> getTopSellingProducts2(LocalDate daysAgo, long limit) {
         return productRepository.findTopSellingProducts(daysAgo, limit).stream()
                 .map(ProductQuery.TopSelling::to)
                 .toList();
