@@ -2,6 +2,7 @@ package kr.hhplus.be.server.domain.coupon;
 
 import jakarta.persistence.EntityManager;
 import kr.hhplus.be.server.domain.user.User;
+import kr.hhplus.be.server.presentation.coupon.CouponScheduler;
 import kr.hhplus.be.server.test.util.RandomGenerator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

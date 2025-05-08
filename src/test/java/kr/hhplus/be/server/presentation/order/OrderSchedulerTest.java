@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.domain.order;
 
 import jakarta.persistence.EntityManager;
+import kr.hhplus.be.server.presentation.order.OrderScheduler;
 import kr.hhplus.be.server.test.util.RandomGenerator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
