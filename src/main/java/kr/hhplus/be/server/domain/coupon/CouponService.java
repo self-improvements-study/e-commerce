@@ -2,6 +2,7 @@ package kr.hhplus.be.server.domain.coupon;
 
 import kr.hhplus.be.server.common.exception.BusinessError;
 import kr.hhplus.be.server.common.exception.BusinessException;
+import kr.hhplus.be.server.common.redisson.DistributedLock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,12 @@ public class CouponService {
      * @throws BusinessException 쿠폰 없음, 재고 부족, 중복 발급 시 예외 발생
      */
     @Transactional
+    @DistributedLock(
+            topic = "coupon",
+            keyExpression = "#command.couponId",
+            waitTime = 5,
+            leaseTime = 3
+    )
     public CouponInfo.IssuedCoupon issueCoupon(CouponCommand.IssuedCoupon command) {
         Coupon coupon = couponRepository.findCouponByIdForUpdate(command.getCouponId())
                 .orElseThrow(() -> new BusinessException(BusinessError.COUPON_NOT_FOUND));
