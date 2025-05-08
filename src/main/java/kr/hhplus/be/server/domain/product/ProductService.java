@@ -3,6 +3,8 @@ package kr.hhplus.be.server.domain.product;
 import kr.hhplus.be.server.common.exception.BusinessError;
 import kr.hhplus.be.server.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -13,6 +15,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @Service
 public class ProductService {
+
+    private static final String CACHE_NAME = "topSellingProducts";
 
     private final ProductRepository productRepository;
 
@@ -170,13 +174,31 @@ public class ProductService {
     }
 
     // 인기 상품 조회
+    @Cacheable(
+            cacheNames = CACHE_NAME,
+            key = "#daysAgo.toString().replace('-', '')",
+            unless = "#result == null or #result.list == null or #result.list.empty"
+    )
     @Transactional(readOnly = true)
-    public List<ProductInfo.TopSelling> getTopSellingProducts(LocalDateTime daysAgo, long limit) {
-
-    public List<ProductInfo.TopSelling> getTopSellingProducts2(LocalDate daysAgo, long limit) {
-        return productRepository.findTopSellingProducts(daysAgo, limit).stream()
+    public ProductInfo.ProductSalesData getTopSellingProducts(LocalDate daysAgo, long limit) {
+        List<ProductInfo.TopSelling> topSelling = productRepository.findTopSellingProducts(daysAgo, limit).stream()
                 .map(ProductQuery.TopSelling::to)
                 .toList();
+
+        return ProductInfo.ProductSalesData.builder()
+                .list(topSelling)
+                .build();
+    }
+
+    @CachePut(
+            cacheNames = CACHE_NAME,
+            key = "#daysAgo.toString().replace('-', '')"
+    )
+    public ProductInfo.ProductSalesData refreshTopSellingProductsCache(LocalDate daysAgo, long limit) {
+
+        return new ProductInfo.ProductSalesData(productRepository.findTopSellingProducts(daysAgo, limit).stream()
+                .map(ProductQuery.TopSelling::to)
+                .toList());
     }
 
 }
