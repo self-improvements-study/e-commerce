@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -24,10 +24,13 @@ public class ProductFacade {
     @Transactional(readOnly = true)
     public List<ProductResult.TopSelling> findTopSellingProducts() {
 
-        LocalDateTime daysAgo = LocalDateTime.now().minusDays(3);
+        LocalDate daysAgo = LocalDate.now().minusDays(3);
         long limit = 5;
 
-        List<ProductInfo.TopSelling> topSellingProducts = productService.getTopSellingProducts(daysAgo, limit);
+        ProductInfo.ProductSalesData productSalesData = productService.getTopSellingProducts(daysAgo, limit);
+
+        List<ProductInfo.TopSelling> topSellingProducts = productSalesData.getList();
+
         return topSellingProducts.stream()
                 .map(ProductResult.TopSelling::from)
                 .toList();

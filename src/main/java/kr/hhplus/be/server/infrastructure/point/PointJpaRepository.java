@@ -13,7 +13,4 @@ public interface PointJpaRepository extends JpaRepository<Point, Long> {
 
     Optional<Point> findPointByUserId(Long userId);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT p FROM Point p WHERE p.userId = :userId")
-    Optional<Point> findPointByUserIdForUpdate(@Param("userId") Long userId);
 }

@@ -14,7 +14,6 @@ public class CouponFacade {
 
     private final CouponService couponService;
 
-    @Transactional
     public CouponResult.IssuedCoupon issueCoupon(CouponCriteria.IssuedCoupon issuedCoupon) {
         CouponInfo.IssuedCoupon info = couponService.issueCoupon(issuedCoupon.toCommand());
         return CouponResult.IssuedCoupon.from(info);

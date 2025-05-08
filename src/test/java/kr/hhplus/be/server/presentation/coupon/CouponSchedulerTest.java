@@ -1,6 +1,9 @@
-package kr.hhplus.be.server.domain.coupon;
+package kr.hhplus.be.server.presentation.coupon;
 
 import jakarta.persistence.EntityManager;
+import kr.hhplus.be.server.domain.coupon.Coupon;
+import kr.hhplus.be.server.domain.coupon.CouponRepository;
+import kr.hhplus.be.server.domain.coupon.UserCoupon;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.test.util.RandomGenerator;
 import org.junit.jupiter.api.DisplayName;
