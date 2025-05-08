@@ -1,9 +1,9 @@
 package kr.hhplus.be.server.application.order;
 
+import kr.hhplus.be.server.common.redisson.DistributedLock;
 import kr.hhplus.be.server.domain.coupon.CouponCommand;
 import kr.hhplus.be.server.domain.coupon.CouponInfo;
 import kr.hhplus.be.server.domain.coupon.CouponService;
-import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderCommand;
 import kr.hhplus.be.server.domain.order.OrderInfo;
 import kr.hhplus.be.server.domain.order.OrderService;
@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -32,8 +33,13 @@ public class OrderFacade {
     private final OrderService orderService;
     private final PaymentService paymentService;
 
-
     @Transactional
+    @DistributedLock(
+            topic = "stock",
+            keyExpression = "#criteria.toOptionIds()",
+            waitTime = 5,
+            leaseTime = 3
+    )
     public OrderResult.OrderSummary order(OrderCriteria.Detail criteria) {
         List<OrderCriteria.Item> items = criteria.getItems();
 

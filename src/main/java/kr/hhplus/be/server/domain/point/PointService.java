@@ -65,7 +65,7 @@ public class PointService {
      */
     @Transactional
     public PointInfo.Decrease decrease(long userId, long amount) {
-        Point point = pointRepository.findPointByUserIdForUpdate(userId)
+        Point point = pointRepository.findPointByUserId(userId)
                 .orElseThrow(() -> new BusinessException(BusinessError.NO_REGISTERED_USER));
 
         point.decrease(amount);

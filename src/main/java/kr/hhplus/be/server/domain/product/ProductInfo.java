@@ -13,10 +13,10 @@ public final class ProductInfo {
     @Getter
     @Builder
     public static class Detail {
-        private final long productId;
-        private final String name;
-        private final long price;
-        private final List<Option> options;
+        private long productId;
+        private String name;
+        private long price;
+        private List<Option> options;
 
         public static Detail from(Product product, List<Option> options) {
             return Detail.builder()
@@ -31,26 +31,26 @@ public final class ProductInfo {
     @Getter
     @Builder
     public static class Option {
-        private final long optionId;
-        private final String size;
-        private final String color;
-        private final long stockQuantity;
+        private long optionId;
+        private String size;
+        private String color;
+        private long stockQuantity;
     }
 
     @Getter
     @Builder
     public static class PriceOption {
-        private final long optionId;
-        private final long price;
-        private final long stockQuantity;
+        private long optionId;
+        private long price;
+        private long stockQuantity;
     }
 
     @Getter
     @Builder
     public static class TopSelling {
-        private final long productId;
-        private final String name;
-        private final long salesCount;
+        private Long productId;
+        private String name;
+        private Long salesCount;
     }
 
     @Getter
