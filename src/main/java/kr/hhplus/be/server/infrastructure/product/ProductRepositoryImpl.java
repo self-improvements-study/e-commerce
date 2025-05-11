@@ -2,16 +2,14 @@ package kr.hhplus.be.server.infrastructure.product;
 
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import jakarta.persistence.LockModeType;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.product.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,8 +64,9 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public List<ProductQuery.TopSelling> findTopSellingProducts(LocalDateTime daysAgo, long limit) {
+    public List<ProductQuery.TopSelling> findTopSellingProducts(LocalDate daysAgo, long limit) {
         NumberExpression<Long> salesCount = orderItem.quantity.sum().castToNum(Long.class);
+        LocalDateTime dateTime = LocalDateTime.of(daysAgo, LocalTime.MIN);
 
         return queryFactory
                 .select(new QProductQuery_TopSelling(
@@ -81,7 +80,7 @@ public class ProductRepositoryImpl implements ProductRepository {
                 .join(order).on(order.id.eq(orderItem.orderId))
                 .where(
                         order.status.eq(Order.Status.SUCCESS),
-                        order.orderDate.goe(daysAgo)
+                        order.orderDate.goe(dateTime)
                 )
                 .groupBy(product.id)
                 .orderBy(salesCount.desc())

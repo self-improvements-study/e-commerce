@@ -10,13 +10,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,18 +42,18 @@ class ProductServiceTest {
                     10L
             );
 
-            LocalDateTime daysAgo = LocalDateTime.now().minusDays(3);
+            LocalDate daysAgo = LocalDate.now().minusDays(3);
             long limit = 5;
 
             when(productRepository.findTopSellingProducts(daysAgo, limit))
                     .thenReturn(List.of(projection));
 
             // when
-            List<ProductInfo.TopSelling> results = productService.getTopSellingProducts(daysAgo, limit);
+            ProductInfo.ProductSalesData results = productService.getTopSellingProducts(daysAgo, limit);
 
             // then
-            assertThat(results).hasSize(1);
-            ProductInfo.TopSelling topSelling = results.get(0);
+            assertThat(results.getList()).hasSize(1);
+            ProductInfo.TopSelling topSelling = results.getList().get(0);
             assertThat(topSelling.getProductId()).isEqualTo(1L);
             assertThat(topSelling.getName()).isEqualTo("인기상품");
             assertThat(topSelling.getSalesCount()).isEqualTo(10L);

@@ -47,10 +47,28 @@ public final class ProductInfo {
 
     @Getter
     @Builder
+    @NoArgsConstructor
+    public static class ProductSalesData {
+        private List<TopSelling> list;
+
+        public ProductSalesData(List<TopSelling> list) {
+            this.list = list;
+        }
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
     public static class TopSelling {
         private Long productId;
         private String name;
         private Long salesCount;
+
+        public TopSelling(Long productId, String name, Long salesCount) {
+            this.productId = productId;
+            this.name = name;
+            this.salesCount = salesCount;
+        }
     }
 
     @Getter
