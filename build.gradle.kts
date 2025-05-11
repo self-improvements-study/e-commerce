@@ -58,10 +58,17 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:mysql")
+    testImplementation("com.redis:testcontainers-redis:2.2.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Fixture Monkey
     testImplementation("com.navercorp.fixturemonkey:fixture-monkey-starter:1.1.11")
+
+    // Redisson
+    implementation("org.redisson:redisson-spring-boot-starter:3.23.2")
+
+    // Jetbrains Annotations
+    compileOnly("org.jetbrains:annotations:26.0.2")
 }
 
 tasks.withType<Test> {
