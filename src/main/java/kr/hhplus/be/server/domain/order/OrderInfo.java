@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,13 +35,15 @@ public final class OrderInfo {
     @Getter
     @Builder
     public static class OrderItemDetail {
-        private final long optionId;
+        private final Long optionId;
+        private final Long productId;
         private final String productName;
         private final String size;
         private final String color;
         private final Integer quantity;
         private final Long userCouponId;
         private final long price;
+        private final LocalDate orderDate;
     }
 
     @Getter

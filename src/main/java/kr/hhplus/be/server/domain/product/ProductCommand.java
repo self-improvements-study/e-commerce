@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static java.util.Comparator.comparing;
@@ -49,6 +50,24 @@ public final class ProductCommand {
             return OptionStock.builder()
                     .optionId(optionId)
                     .quantity(quantity)
+                    .build();
+        }
+    }
+
+    @Getter
+    @Builder
+    public static class ProductSignal {
+        private Long productId;
+        private LocalDate date;
+        private String name;
+        private Long quantity;
+
+        public static ProductSignal of(Long productId, LocalDate date, String name, Integer quantity) {
+            return ProductSignal.builder()
+                    .productId(productId)
+                    .date(date)
+                    .name(name)
+                    .quantity(Long.valueOf(quantity))
                     .build();
         }
     }
