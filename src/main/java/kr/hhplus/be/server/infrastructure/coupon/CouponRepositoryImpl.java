@@ -99,4 +99,20 @@ public class CouponRepositoryImpl implements CouponRepository {
     public List<UserCoupon> findUserCouponsByExpiredDate(LocalDateTime expiredDate) {
         return userCouponJpaRepository.findExpiredUserCoupons(expiredDate);
     }
+
+    @Override
+    public List<Coupon> findByCouponStatus(Coupon.Status status) {
+        return couponJpaRepository.findByStatus(status);
+    }
+
+    @Override
+    public Optional<Coupon> findByIdForUpdate(Long couponId, Coupon.Status status) {
+        return couponJpaRepository.findByIdForUpdate(couponId, status);
+    }
+
+    @Override
+    public long countUserCouponByCouponId(Long couponId) {
+        return userCouponJpaRepository.countByCouponId(couponId);
+    };
+
 }

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import kr.hhplus.be.server.common.exception.BusinessError;
 import kr.hhplus.be.server.common.exception.BusinessException;
 import kr.hhplus.be.server.domain.common.entity.AuditableEntity;
+import kr.hhplus.be.server.domain.order.Order;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -54,8 +55,22 @@ public class Coupon extends AuditableEntity {
     @Column(name = "ended_date", nullable = false)
     private LocalDateTime endedDate;
 
+    /**
+     * 쿠폰 상태
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private Coupon.Status status;
+
     @Version
     private Long version;
+
+    public void issued() {
+        if (this.status != Coupon.Status.AVAILABLE) {
+            throw new BusinessException(BusinessError.INVALID_ORDER_STATUS);
+        }
+        this.status = Coupon.Status.ISSUED;
+    }
 
     public void decrease(long quantity) {
 
@@ -67,5 +82,12 @@ public class Coupon extends AuditableEntity {
         }
 
         this.quantity -= quantity;
+    }
+
+    public enum Status {
+        STANDARD,
+        AVAILABLE,    // 발급 가능
+        ISSUED,       // 발급 완료
+        EXPIRED       // 만료됨
     }
 }

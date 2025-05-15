@@ -22,4 +22,5 @@ public interface UserCouponJpaRepository extends JpaRepository<UserCoupon, Long>
             """)
     List<UserCoupon> findExpiredUserCoupons(@Param("standardDateTime") LocalDateTime standardDateTime);
 
+    long countByCouponId(Long couponId);
 }
