@@ -27,6 +27,23 @@ public class CouponCommand {
 
     @Getter
     @Builder
+    public static class Issued {
+        Long couponId;
+        Long quantity;
+        Coupon.Status status;
+
+        public static Issued of(Long couponId, Long quantity, Coupon.Status status) {
+            return Issued.builder()
+                    .couponId(couponId)
+                    .quantity(quantity)
+                    .status(status)
+                    .build();
+        }
+
+    }
+
+    @Getter
+    @Builder
     public static class Use {
         private List<OwnedCoupon> ownedCoupons;
 

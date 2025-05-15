@@ -10,12 +10,14 @@ import kr.hhplus.be.server.domain.payment.PaymentInfo;
 import kr.hhplus.be.server.domain.payment.PaymentService;
 import kr.hhplus.be.server.domain.point.PointService;
 import kr.hhplus.be.server.domain.product.ProductCommand;
+import kr.hhplus.be.server.domain.product.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
+import java.util.Objects;
 
 @RequiredArgsConstructor
 @Component
@@ -28,6 +30,7 @@ public class PaymentFacade {
     private final PointService pointService;
 
     private final CouponService couponService;
+    private final ProductService productService;
 
     /**
      * 사용자 결제 요청을 처리합니다.
@@ -45,13 +48,16 @@ public class PaymentFacade {
         // 2. 주문 아이템에서 쿠폰 ID 및 옵션 재고 정보 추출
         List<Long> userCouponIds = orderInfo.getOrderItems().stream()
                 .map(OrderInfo.OrderItemDetail::getUserCouponId)
+                .filter(Objects::nonNull)
                 .toList();
 
         List<ProductCommand.OptionStock> optionStocks = orderInfo.getOrderItems().stream()
-                .map(item -> ProductCommand.OptionStock.builder()
-                        .optionId(item.getOptionId())
-                        .quantity(item.getQuantity())
-                        .build())
+                .map(item -> ProductCommand.OptionStock.of(item.getOptionId(), item.getQuantity()))
+                .toList();
+
+        List<ProductCommand.ProductSignal> productSignalList = orderInfo.getOrderItems().stream()
+                .map(item -> ProductCommand.ProductSignal
+                        .of(item.getProductId(), item.getOrderDate(), item.getProductName(), item.getQuantity()))
                 .toList();
 
         // 3. 결제 처리
@@ -70,7 +76,10 @@ public class PaymentFacade {
         // 7. 주문 상태 변경
         orderService.success(orderId);
 
-        // 8. 결제 성공 결과 반환
+        // 8. 상품 관련 지표 저장
+        productService.storeProductSignal(productSignalList);
+
+        // 9. 결제 성공 결과 반환
         return PaymentResult.PaymentSummary.from(paymentInfo);
     }
 }

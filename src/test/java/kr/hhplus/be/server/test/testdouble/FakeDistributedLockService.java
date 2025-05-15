@@ -4,12 +4,14 @@ import kr.hhplus.be.server.common.redisson.DistributedLock;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Component
 public class FakeDistributedLockService {
 
+    @Transactional
     @DistributedLock(
             topic = "stock",
             keyExpression = "#dummy.toOptionIds()",

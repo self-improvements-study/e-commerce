@@ -16,11 +16,15 @@ public interface ProductRepository {
 
     Optional<Product> findProductById(long productId);
 
-    List<ProductQuery.TopSelling> findTopSellingProducts(LocalDate daysAgo, long limit);
-
     List<ProductQuery.PriceOption> findProductOptionsById(List<Long> optionIds);
 
     Product saveProduct(Product product);
 
     List<ProductOption> saveProductOption(List<ProductOption> product);
+
+    void saveProductSignal(ProductSignal productSignal);
+
+    Optional<ProductSignal> findProductSignalByDateAndProductId(LocalDate date, Long productId);
+
+    List<ProductQuery.TopSelling> findTopSellingProducts(LocalDate daysAgo, long limit);
 }
