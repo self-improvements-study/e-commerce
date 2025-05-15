@@ -1,8 +1,6 @@
 package kr.hhplus.be.server.application.coupon;
 
-import kr.hhplus.be.server.domain.coupon.Coupon;
 import kr.hhplus.be.server.domain.coupon.CouponInfo;
-import kr.hhplus.be.server.domain.coupon.UserCoupon;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -31,6 +29,20 @@ public final class CouponResult {
                     .discount(info.getDiscount())
                     .startedDate(info.getStartedDate())
                     .endedDate(info.getEndedDate())
+                    .build();
+        }
+    }
+
+    @Getter
+    @Builder
+    public static class CouponActivation {
+        private long userId;
+        private long couponId;
+
+        public static CouponActivation from(CouponInfo.CouponActivation info) {
+            return CouponActivation.builder()
+                    .userId(info.getUserId())
+                    .couponId(info.getCouponId())
                     .build();
         }
     }

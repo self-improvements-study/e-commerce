@@ -16,7 +16,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ProductService 테스트")
@@ -246,6 +247,30 @@ class ProductServiceTest {
             assertThat(result).extracting("optionId").containsExactly(101L, 102L);
             assertThat(result).extracting("price").containsExactly(10000L, 20000L);
             assertThat(result).extracting("stockQuantity").containsExactly(5L, 10L);
+        }
+    }
+
+    @Nested
+    @DisplayName("상품 관련 지표 저장")
+    class StoreProductSignalTest {
+
+        @Test
+        @DisplayName("상품 관련 지표를 저장한다.")
+        void success() {
+            // given
+            ProductCommand.ProductSignal productSignal1 = ProductCommand.ProductSignal.of(1L, LocalDate.now(), "Product A", 10);
+            ProductCommand.ProductSignal productSignal2 = ProductCommand.ProductSignal.of(2L, LocalDate.now(), "Product B", 5);
+
+            List<ProductCommand.ProductSignal> productSignalList = List.of(productSignal1, productSignal2);
+
+            // when
+            when(productRepository.findProductSignalByDateAndProductId(any(), any()))
+                    .thenReturn(Optional.empty()); // 상품이 없으면 저장이 되어야 하므로 Optional.empty 반환
+
+            // then
+            productService.storeProductSignal(productSignalList);
+
+            verify(productRepository, times(2)).saveProductSignal(any(ProductSignal.class)); // saveProductSignal 호출 확인
         }
     }
 

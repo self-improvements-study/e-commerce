@@ -4,7 +4,6 @@ import kr.hhplus.be.server.common.exception.BusinessError;
 import kr.hhplus.be.server.common.exception.BusinessException;
 import kr.hhplus.be.server.common.redisson.DistributedLock;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -12,12 +11,17 @@ import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
 public class CouponService {
 
     private final CouponRepository couponRepository;
+
+    private final CouponRedisRepository couponRedisRepository;
 
     private final TransactionTemplate transactionTemplate;
 
@@ -57,6 +61,73 @@ public class CouponService {
         UserCoupon savedUserCoupon = couponRepository.saveUserCoupon(command.toEntity());
 
         return CouponInfo.IssuedCoupon.from(savedUserCoupon, coupon);
+    }
+
+    @Transactional
+    public CouponInfo.CouponActivation addCouponToQueue(CouponCommand.IssuedCoupon command) {
+
+        Boolean added = couponRedisRepository.addCouponRequestToQueue(command.getUserId(), command.getCouponId());
+
+        if (!added) {
+            throw new BusinessException(BusinessError.REDIS_OPERATION_FAILED);
+        }
+
+        return CouponInfo.CouponActivation.from(command.getUserId(), command.getCouponId());
+    }
+
+    @Transactional(readOnly = true)
+    public List<CouponInfo.AvailableCoupon> findByCouponStatus() {
+        // AVAILABLE 상태인 쿠폰들을 조회
+        List<Coupon> byCouponStatus = couponRepository.findByCouponStatus(Coupon.Status.AVAILABLE);
+
+        return byCouponStatus.stream()
+                .map(CouponInfo.AvailableCoupon::from)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void issuedCoupon(CouponCommand.Issued command) {
+
+        Coupon byIdForUpdate = couponRepository.findByIdForUpdate(command.couponId, command.getStatus())
+                .orElseThrow(() -> new BusinessException(BusinessError.COUPON_NOT_FOUND));
+
+        // 해당 쿠폰에 대해 발급된 유저 수를 조회
+        long count = couponRepository.countUserCouponByCouponId(command.getCouponId());
+
+        // 발급된 수가 쿠폰의 최대 발급 수량과 같으면, 더 이상 발급할 수 없으므로 상태 변경
+        if (count == byIdForUpdate.getQuantity()) {
+            // 쿠폰 발급 상태로 변경
+            byIdForUpdate.issued();
+
+            // 상태 변경된 쿠폰을 DB에 저장
+            couponRepository.save(byIdForUpdate);
+
+            // 쿠폰 발급 완료
+            return;
+        }
+
+        Set<String> couponRequestQueue = couponRedisRepository
+                .getCouponRequestQueue(byIdForUpdate.getId(), byIdForUpdate.getQuantity());
+
+        // 발급 대기 중인 유저들에 대해 쿠폰을 발급 처리
+        for (String userId : couponRequestQueue) {
+
+            // 중복 발급을 방지하기 위해 해당 유저가 이미 발급된 쿠폰인지 확인
+            boolean alreadyIssued = couponRepository.existsUserCoupon(Long.parseLong(userId), byIdForUpdate.getId());
+
+            // 이미 발급된 유저라면, 이번 반복에서 해당 유저는 건너뛰고 다음 유저로 넘어감
+            if (alreadyIssued) {
+                continue; // 중복 발급 방지
+            }
+
+            // 쿠폰을 새로 발급하여 유저 쿠폰 정보를 저장
+            couponRepository.saveUserCoupon(UserCoupon.builder()
+                    .userId(Long.parseLong(userId))
+                    .couponId(byIdForUpdate.getId())
+                    .used(false)
+                    .build()
+            );
+        }
     }
 
     /**

@@ -69,6 +69,14 @@ public final class ProductInfo {
             this.name = name;
             this.salesCount = salesCount;
         }
+
+        public static TopSelling from(Long productId, String name, Long salesCount) {
+            return TopSelling.builder()
+                    .productId(productId)
+                    .name(name)
+                    .salesCount(salesCount)
+                    .build();
+        }
     }
 
     @Getter

@@ -25,4 +25,10 @@ public interface CouponRepository {
     List<CouponQuery.OwnedCoupon> findUserCouponsByIds(List<Long> userCouponIds);
 
     List<UserCoupon> findUserCouponsByExpiredDate(LocalDateTime expiredDate);
+
+    List<Coupon> findByCouponStatus(Coupon.Status status);
+
+    Optional<Coupon> findByIdForUpdate(Long couponId, Coupon.Status status);
+
+    long countUserCouponByCouponId(Long couponId);
 }

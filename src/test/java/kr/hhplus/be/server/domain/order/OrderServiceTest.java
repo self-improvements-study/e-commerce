@@ -10,6 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -53,12 +54,14 @@ class OrderServiceTest {
 
             OrderQuery.OrderItemProjection item = new OrderQuery.OrderItemProjection(
                     10L,
+                    1L,
                     "상품",
                     "M",
                     "Red",
                     2,
                     100L,
-                    5000L
+                    5000L,
+                    LocalDateTime.now()
             );
 
             when(orderRepository.findOrderById(orderId)).thenReturn(Optional.of(order));
@@ -145,12 +148,14 @@ class OrderServiceTest {
 
             OrderQuery.OrderItemProjection item = new OrderQuery.OrderItemProjection(
                     10L,
+                    1L,
                     "상품",
                     "M",
                     "Red",
                     2,
                     100L,
-                    5000L
+                    5000L,
+                    LocalDateTime.now()
             );
 
             when(orderRepository.findOrdersByUserId(userId)).thenReturn(List.of(order));

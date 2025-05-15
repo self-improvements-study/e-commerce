@@ -14,14 +14,26 @@ public record CouponResponse() {
             LocalDateTime startedDate,
             LocalDateTime endedDate
     ) {
-        public static CreateUserCoupon from(CouponResult.IssuedCoupon issuedCoupon) {
+        public static CreateUserCoupon from(CouponResult.IssuedCoupon issuedCouponDetail) {
             return new CreateUserCoupon(
-                    issuedCoupon.getUserCouponId(),
-                    issuedCoupon.getCouponId(),
-                    issuedCoupon.getCouponName(),
-                    issuedCoupon.getDiscount(),
-                    issuedCoupon.getStartedDate(),
-                    issuedCoupon.getEndedDate()
+                    issuedCouponDetail.getUserCouponId(),
+                    issuedCouponDetail.getCouponId(),
+                    issuedCouponDetail.getCouponName(),
+                    issuedCouponDetail.getDiscount(),
+                    issuedCouponDetail.getStartedDate(),
+                    issuedCouponDetail.getEndedDate()
+            );
+        }
+    }
+
+    public record IssuedCoupon(
+            Long couponId,
+            Long userId
+    ) {
+        public static IssuedCoupon from(CouponResult.CouponActivation couponActivation) {
+            return new IssuedCoupon(
+                    couponActivation.getCouponId(),
+                    couponActivation.getUserId()
             );
         }
     }

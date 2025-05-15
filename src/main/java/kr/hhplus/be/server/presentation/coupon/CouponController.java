@@ -20,8 +20,15 @@ public class CouponController implements CouponApi {
     public CouponResponse.CreateUserCoupon createUserCoupon(
             @RequestBody CouponRequest.Issue request
     ) {
-        CouponResult.IssuedCoupon issuedCoupon = couponFacade.issueCoupon(request.toCriteria());
-        return CouponResponse.CreateUserCoupon.from(issuedCoupon);
+        CouponResult.IssuedCoupon issuedCouponDetail = couponFacade.issueCoupon(request.toCriteria());
+        return CouponResponse.CreateUserCoupon.from(issuedCouponDetail);
+    }
+
+    @PostMapping("/enqueue")
+    public CouponResponse.IssuedCoupon addCouponRequest(
+            @RequestBody CouponRequest.Issue request
+    ) {
+        return CouponResponse.IssuedCoupon.from(couponFacade.addCouponToQueue(request.toCriteria()));
     }
 
     // 유저 쿠폰 조회
