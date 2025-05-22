@@ -22,7 +22,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
-    private final ProductRedisRepository productRedisRepository;
+    private final ProductRankRepository productRankRepository;
 
     /**
      * 상품 ID를 기반으로 상품 상세 정보를 조회합니다.
@@ -182,7 +182,7 @@ public class ProductService {
     public ProductInfo.ProductSalesData getTopSellingProducts(LocalDate daysAgo, long limit) {
 
         // 캐시에서 인기 상품 조회
-        Set<ZSetOperations.TypedTuple<String>> cachedProductIds = productRedisRepository.getAllTopSellingProductsFromCache();
+        Set<ZSetOperations.TypedTuple<String>> cachedProductIds = productRankRepository.getAllTopSellingProductsFromCache();
 
         List<ProductInfo.TopSelling> topSelling = new ArrayList<>();
 
@@ -220,7 +220,7 @@ public class ProductService {
 
         // Redis Sorted Set에 상품 데이터를 저장
         topSellingProducts.forEach(productSignal -> {
-            productRedisRepository.addTopSellingProductToCache(productSignal.productId(), productSignal.salesCount());
+            productRankRepository.addTopSellingProductToCache(productSignal.productId(), productSignal.salesCount());
         });
     }
 

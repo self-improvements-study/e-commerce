@@ -19,8 +19,8 @@ public class OrderService {
     private final OrderCalculator orderCalculator;
     private final OrderRepository orderRepository;
     private final OrderValidators orderValidators;
-    private final OrderExternalClient orderExternalClient;
     private final TransactionTemplate transactionTemplate;
+    private final OrderEventPublisher orderEventPublisher;
 
     /**
      * 주문 ID를 기반으로 주문 내역을 조회합니다.
@@ -140,8 +140,14 @@ public class OrderService {
         // 변경된 주문 상태를 저장
         orderRepository.saveOrder(order);
 
-        // 외부 플랫폼 데이터 전송
-        orderExternalClient.sendOrder(order);
+        // 주문 성공 이벤트 발행
+        List<OrderQuery.OrderItemProjection> orderItemByOrderId = orderRepository.findOrderItemByOrderId(orderId);
+        List<OrderInfo.OrderItemDetail> orderItem = orderItemByOrderId.stream()
+                .map(OrderQuery.OrderItemProjection::to)
+                .toList();
+
+        OrderEvent.Send event = OrderEvent.Send.from(order, orderItem);
+        orderEventPublisher.publish(event);
     }
 
     /**

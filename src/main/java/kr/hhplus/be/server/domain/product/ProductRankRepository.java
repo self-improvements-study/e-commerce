@@ -4,7 +4,7 @@ import org.springframework.data.redis.core.ZSetOperations;
 
 import java.util.Set;
 
-public interface ProductRedisRepository {
+public interface ProductRankRepository {
 
     void addTopSellingProductToCache(long productId, Long orderCount);
 

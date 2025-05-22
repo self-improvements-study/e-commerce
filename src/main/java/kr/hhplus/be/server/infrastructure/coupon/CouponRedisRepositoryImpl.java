@@ -10,7 +10,7 @@ import java.util.Set;
 
 @Repository
 @RequiredArgsConstructor
-public class CouponRedisRepositoryImpl implements CouponRedisRepository {
+public class CouponRedisRepositoryImpl implements CouponApplyRepository {
 
     private final RedisTemplate<String, String> redisTemplate;
 

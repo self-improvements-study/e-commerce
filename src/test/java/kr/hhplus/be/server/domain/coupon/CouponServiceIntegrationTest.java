@@ -33,7 +33,7 @@ class CouponServiceIntegrationTest {
     private EntityManager entityManager;
 
     @Autowired
-    private CouponRedisRepository couponRedisRepository;
+    private CouponApplyRepository couponRedisRepository;
 
     @Nested
     @DisplayName("issueCoupon 테스트")
