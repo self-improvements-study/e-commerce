@@ -75,4 +75,55 @@ public class OrderEvent {
         }
     }
 
+    @Getter
+    public static class CreateOrder {
+
+        private Long orderId;
+
+        private Long userId;
+
+        private LocalDateTime orderDate;
+
+        private Order.Status status;
+
+        private Long totalPrice;
+
+        private List<OrderEvent.CreateOrder.Item> orderItem;
+
+        public static OrderEvent.CreateOrder from(Order order, List<OrderCommand.Item> items) {
+            OrderEvent.CreateOrder success = new OrderEvent.CreateOrder();
+            success.orderId = order.getId();
+            success.userId = order.getUserId();
+            success.orderDate = order.getOrderDate();
+            success.status = order.getStatus();
+            success.totalPrice = order.getTotalPrice();
+            success.orderItem = items.stream().map(OrderEvent.CreateOrder.Item::from).toList();
+
+            return success;
+        }
+
+        @Getter
+        @Builder
+        public static class Item {
+
+            private long optionId;
+
+            private int quantity;
+
+            private Long userCouponId;
+
+            private long price;
+
+            public static OrderEvent.CreateOrder.Item from(OrderCommand.Item detail) {
+                return OrderEvent.CreateOrder.Item.builder()
+                        .optionId(detail.getOptionId())
+                        .quantity(detail.getQuantity())
+                        .userCouponId(detail.getUserCouponId())
+                        .price(detail.getPrice())
+                        .build();
+            }
+
+        }
+    }
+
 }
