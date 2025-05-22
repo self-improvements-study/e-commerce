@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -30,6 +31,9 @@ class CouponServiceIntegrationTest {
 
     @Autowired
     private EntityManager entityManager;
+
+    @Autowired
+    private CouponRedisRepository couponRedisRepository;
 
     @Nested
     @DisplayName("issueCoupon 테스트")
@@ -402,6 +406,51 @@ class CouponServiceIntegrationTest {
             assertThatThrownBy(() -> sut.cancel(command))
                     .isInstanceOf(BusinessException.class)
                     .hasMessage(BusinessError.COUPON_NOT_USED.getMessage());
+        }
+    }
+
+    @Nested
+    @DisplayName("issuedCoupon 테스트")
+    class IssuedCouponTest {
+
+        @Test
+        @DisplayName("유저 선착순 쿠폰 발급 테스트")
+        void addCouponToQueue() {
+
+            // given
+            User user = RandomGenerator.getFixtureMonkey()
+                    .giveMeBuilder(User.class)
+                    .set("id", null)
+                    .build()
+                    .sample();
+            entityManager.persist(user);
+
+            Coupon coupon = RandomGenerator.getFixtureMonkey()
+                    .giveMeBuilder(Coupon.class)
+                    .set("id", null)
+                    .set("quantity", 1L)
+                    .set("endedDate", LocalDateTime.now().plusDays(1))  // 만료된 쿠폰
+                    .set("status", Coupon.Status.AVAILABLE)
+                    .build()
+                    .sample();
+            entityManager.persist(coupon);
+
+            CouponCommand.IssuedCoupon issuedCoupon = CouponCommand.IssuedCoupon.builder()
+                    .userId(user.getId())
+                    .couponId(coupon.getId())
+                    .build();
+
+            // when
+            CouponInfo.CouponActivation couponToQueue = sut.addCouponToQueue(issuedCoupon);
+
+
+            // then
+            Set<String> couponRequestQueue =
+                    couponRedisRepository.getCouponRequestQueue(coupon.getId(), coupon.getQuantity());
+
+            assertThat(couponRequestQueue).hasSize(1);
+            assertThat(couponRequestQueue).contains(String.valueOf(couponToQueue.getUserId()));
+
         }
     }
 }
