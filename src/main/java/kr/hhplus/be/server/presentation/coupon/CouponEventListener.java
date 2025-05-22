@@ -35,4 +35,16 @@ public class CouponEventListener {
 
     }
 
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
+    public void cancelCoupon(PaymentEvent.CreatePayment event) {
+
+        List<Long> userCouponIds = event.getUserCouponList().stream()
+                .map(PaymentEvent.CreatePayment.UserCoupon::getUserCouponId)
+                .filter(Objects::nonNull)
+                .toList();
+
+        couponService.cancel(CouponCommand.Cancel.of(userCouponIds));
+
+    }
+
 }
