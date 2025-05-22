@@ -11,7 +11,6 @@ import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -21,7 +20,7 @@ public class CouponService {
 
     private final CouponRepository couponRepository;
 
-    private final CouponRedisRepository couponRedisRepository;
+    private final CouponApplyRepository couponApplyRepository;
 
     private final TransactionTemplate transactionTemplate;
 
@@ -66,7 +65,7 @@ public class CouponService {
     @Transactional
     public CouponInfo.CouponActivation addCouponToQueue(CouponCommand.IssuedCoupon command) {
 
-        Boolean added = couponRedisRepository.addCouponRequestToQueue(command.getUserId(), command.getCouponId());
+        Boolean added = couponApplyRepository.addCouponRequestToQueue(command.getUserId(), command.getCouponId());
 
         if (!added) {
             throw new BusinessException(BusinessError.REDIS_OPERATION_FAILED);
@@ -106,7 +105,7 @@ public class CouponService {
             return;
         }
 
-        Set<String> couponRequestQueue = couponRedisRepository
+        Set<String> couponRequestQueue = couponApplyRepository
                 .getCouponRequestQueue(byIdForUpdate.getId(), byIdForUpdate.getQuantity());
 
         // 발급 대기 중인 유저들에 대해 쿠폰을 발급 처리
