@@ -2,7 +2,7 @@ package kr.hhplus.be.server.domain.coupon;
 
 import java.util.Set;
 
-public interface CouponRedisRepository {
+public interface CouponApplyRepository {
 
     Boolean addCouponRequestToQueue(Long userId, Long couponId);
 

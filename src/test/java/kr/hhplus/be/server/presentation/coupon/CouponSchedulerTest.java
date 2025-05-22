@@ -2,7 +2,7 @@ package kr.hhplus.be.server.presentation.coupon;
 
 import jakarta.persistence.EntityManager;
 import kr.hhplus.be.server.domain.coupon.Coupon;
-import kr.hhplus.be.server.domain.coupon.CouponRedisRepository;
+import kr.hhplus.be.server.domain.coupon.CouponApplyRepository;
 import kr.hhplus.be.server.domain.coupon.CouponRepository;
 import kr.hhplus.be.server.domain.coupon.UserCoupon;
 import kr.hhplus.be.server.domain.user.User;
@@ -37,7 +37,7 @@ class CouponSchedulerTest {
     private CouponRepository couponRepository;
 
     @Autowired
-    private CouponRedisRepository couponRedisRepository;
+    private CouponApplyRepository couponRedisRepository;
 
     @Test
     @DisplayName("쿠폰 만료 처리 스케줄러 테스트")

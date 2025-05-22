@@ -16,12 +16,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @ActiveProfiles("test")
 @Transactional
@@ -34,6 +38,9 @@ class OrderServiceIntegrationTest {
 
     @Autowired
     private EntityManager entityManager;
+
+    @MockitoBean
+    private OrderEventPublisher orderEventPublisher;
 
     @Nested
     @DisplayName("order 테스트")
@@ -451,6 +458,97 @@ class OrderServiceIntegrationTest {
             assertThatThrownBy(() -> sut.success(invalidOrderId))
                     .isInstanceOf(BusinessException.class)
                     .hasMessage(BusinessError.ORDER_NOT_FOUND.getMessage());
+        }
+    }
+
+    @Nested
+    @DisplayName("주문 성공 이벤트 발행 테스트")
+    class OrderSendEventPublisherTest {
+
+        @Test
+        @DisplayName("성공 - 결제 성공 시 이벤트 발행 여부 확인")
+        void success1() {
+
+            // given
+            User user = RandomGenerator.getFixtureMonkey()
+                    .giveMeBuilder(User.class)
+                    .set("id", null)
+                    .build()
+                    .sample();
+            entityManager.persist(user);
+
+            Product product = RandomGenerator.getFixtureMonkey()
+                    .giveMeBuilder(Product.class)
+                    .set("id", null)
+                    .build()
+                    .sample();
+            entityManager.persist(product);
+
+            ProductOption option = RandomGenerator.getFixtureMonkey()
+                    .giveMeBuilder(ProductOption.class)
+                    .set("id", null)
+                    .set("productId", product.getId())
+                    .build()
+                    .sample();
+            entityManager.persist(option);
+
+            Stock stock = RandomGenerator.getFixtureMonkey()
+                    .giveMeBuilder(Stock.class)
+                    .set("id", null)
+                    .set("productOptionId", option.getId())
+                    .build()
+                    .sample();
+            entityManager.persist(stock);
+
+            Order order = RandomGenerator.getFixtureMonkey()
+                    .giveMeBuilder(Order.class)
+                    .set("id", null)
+                    .set("userId", user.getId())
+                    .set("status", Order.Status.PAYMENT_WAITING)
+                    .build()
+                    .sample();
+            entityManager.persist(order);
+
+            OrderItem orderItem = RandomGenerator.getFixtureMonkey()
+                    .giveMeBuilder(OrderItem.class)
+                    .set("id", null)
+                    .set("orderId", order.getId())
+                    .set("optionId", option.getId())
+                    .build()
+                    .sample();
+            entityManager.persist(orderItem);
+
+
+            OrderCommand.Item e1 = new OrderCommand.Item(
+                    option.getId(),
+                    product.getPrice(),
+                    1,
+                    null,
+                    null
+            );
+
+            // when
+            sut.success(order.getId());
+
+            // then
+            OrderInfo.OrderHistory orderByOrderId = sut.findOrderByOrderId(order.getId());
+            assertThat(orderByOrderId.getStatus()).isEqualTo(Order.Status.SUCCESS);
+
+            verify(orderEventPublisher, times(1)).publish(any(OrderEvent.Send.class));
+        }
+
+        @Test
+        @DisplayName("실패 - 잘못된 주문 ID로 이벤트 발행하지 않음")
+        void failure1() {
+            // given
+            long invalidOrderId = RandomGenerator.nextPositiveLong(Long.MAX_VALUE);
+
+            // when & then
+            assertThatThrownBy(() -> sut.success(invalidOrderId))
+                    .isInstanceOf(BusinessException.class)
+                    .hasMessage(BusinessError.ORDER_NOT_FOUND.getMessage());
+
+            verify(orderEventPublisher, times(0)).publish(any(OrderEvent.Send.class));
         }
     }
 

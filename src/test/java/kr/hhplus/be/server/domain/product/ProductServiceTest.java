@@ -237,7 +237,7 @@ class ProductServiceTest {
             when(productRepository.findProductOptionsById(optionIds))
                     .thenReturn(List.of(option1, option2));
 
-            ProductCommand.OptionIds command = new ProductCommand.OptionIds(optionIds);
+            ProductCommand.OptionId command = new ProductCommand.OptionId(optionIds);
 
             // when
             List<ProductInfo.PriceOption> result = productService.getProductOptionsById(command);

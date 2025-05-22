@@ -6,11 +6,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @Service
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
+
+    private final PaymentEventPublisher paymentEventPublisher;
 
     /**
      * 결제 정보를 저장하고 저장된 결제 정보를 요약 형태로 반환합니다.
@@ -20,6 +24,34 @@ public class PaymentService {
      */
     @Transactional
     public PaymentInfo.PaymentSummary payment(PaymentCommand.Payment command) {
+
+        // OptionStock 리스트 변환
+        List<PaymentEvent.CreatePayment.OptionStock> optionStockList = command.getOptionStockList().stream()
+                .map(optionStock -> PaymentEvent.CreatePayment.OptionStock.of(optionStock.getOptionId(), optionStock.getQuantity()))
+                .toList();
+
+        // ProductSignal 리스트 변환
+        List<PaymentEvent.CreatePayment.ProductSignal> productSignalList = command.getProductSignalList().stream()
+                .map(productSignal -> PaymentEvent.CreatePayment.ProductSignal
+                        .of(productSignal.getProductId(), productSignal.getDate(), productSignal.getName(), productSignal.getQuantity()))
+                .toList();
+
+        // UserCoupon 리스트 변환
+        List<PaymentEvent.CreatePayment.UserCoupon> userCouponList = command.getUserCouponList().stream()
+                .map(userCoupon -> PaymentEvent.CreatePayment.UserCoupon.of(userCoupon.getUserCouponId()))
+                .toList();
+
+        // 이벤트 발행
+        PaymentEvent.CreatePayment event = PaymentEvent.CreatePayment.from(
+                command.getUserId(),
+                command.getOrderId(),
+                command.getAmount(),
+                optionStockList,
+                productSignalList,
+                userCouponList
+        );
+
+        paymentEventPublisher.publish(event);
 
         if (command.getAmount() < 0) {
             throw new BusinessException(BusinessError.PAYMENT_AMOUNT_DECREASE_TOO_SMALL);

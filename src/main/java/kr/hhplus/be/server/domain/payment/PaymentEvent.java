@@ -1,34 +1,31 @@
 package kr.hhplus.be.server.domain.payment;
 
-import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.List;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class PaymentCommand {
+public class PaymentEvent {
 
     @Getter
     @Builder
-    public static class Payment {
+    public static class CreatePayment {
         private long userId;
         private long orderId;
         private long amount;
-        private List<OptionStock> optionStockList;
-        private List<ProductSignal> productSignalList;
-        private List<UserCoupon> userCouponList;
+        private List<CreatePayment.OptionStock> optionStockList;
+        private List<CreatePayment.ProductSignal> productSignalList;
+        private List<CreatePayment.UserCoupon> userCouponList;
 
-        public static Payment of(long userId,
-                                 long orderId,
-                                 long amount,
-                                 List<OptionStock> optionStockList,
-                                 List<ProductSignal> productSignalList,
-                                 List<UserCoupon> userCouponList
+        public static CreatePayment from(long userId,
+                                       long orderId,
+                                       long amount,
+                                       List<CreatePayment.OptionStock> optionStockList,
+                                       List<CreatePayment.ProductSignal> productSignalList,
+                                       List<CreatePayment.UserCoupon> userCouponList
         ) {
-            return Payment.builder()
+            return CreatePayment.builder()
                     .userId(userId)
                     .orderId(orderId)
                     .amount(amount)
@@ -45,8 +42,8 @@ public class PaymentCommand {
             private Long optionId;
             private int quantity;
 
-            public static OptionStock of(Long optionId, int quantity) {
-                return OptionStock.builder()
+            public static CreatePayment.OptionStock of(Long optionId, int quantity) {
+                return CreatePayment.OptionStock.builder()
                         .optionId(optionId)
                         .quantity(quantity)
                         .build();
@@ -62,8 +59,8 @@ public class PaymentCommand {
             private String name;
             private int quantity;
 
-            public static ProductSignal of(Long productId, LocalDate date, String name, Integer quantity) {
-                return ProductSignal.builder()
+            public static CreatePayment.ProductSignal of(Long productId, LocalDate date, String name, Integer quantity) {
+                return CreatePayment.ProductSignal.builder()
                         .productId(productId)
                         .date(date)
                         .name(name)
@@ -77,8 +74,8 @@ public class PaymentCommand {
         public static class UserCoupon {
             private Long userCouponId;
 
-            public static UserCoupon of(Long userCouponId) {
-                return UserCoupon.builder()
+            public static CreatePayment.UserCoupon of(Long userCouponId) {
+                return CreatePayment.UserCoupon.builder()
                         .userCouponId(userCouponId)
                         .build();
             }
