@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static kr.hhplus.be.server.domain.order.QOrder.order;
 import static kr.hhplus.be.server.domain.order.QOrderItem.orderItem;
 import static kr.hhplus.be.server.domain.product.QProduct.product;
 import static kr.hhplus.be.server.domain.product.QProductOption.productOption;
@@ -46,16 +47,19 @@ public class OrderRepositoryImpl implements OrderRepository {
         return queryFactory
                 .select(new QOrderQuery_OrderItemProjection(
                         orderItem.optionId,
+                        product.id,
                         product.name,
                         productOption.size,
                         productOption.color,
                         orderItem.quantity,
                         orderItem.userCouponId,
-                        orderItem.originalPrice
+                        orderItem.originalPrice,
+                        order.orderDate
                 ))
                 .from(orderItem)
                 .join(productOption).on(orderItem.optionId.eq(productOption.id))
                 .join(product).on(productOption.productId.eq(product.id))
+                .join(order).on(orderItem.orderId.eq(order.id))
                 .where(orderItem.orderId.eq(orderId))
                 .fetch();
     }

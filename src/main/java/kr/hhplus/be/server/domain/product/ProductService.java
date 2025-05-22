@@ -3,14 +3,16 @@ package kr.hhplus.be.server.domain.product;
 import kr.hhplus.be.server.common.exception.BusinessError;
 import kr.hhplus.be.server.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Service
@@ -19,6 +21,8 @@ public class ProductService {
     private static final String CACHE_NAME = "topSellingProducts";
 
     private final ProductRepository productRepository;
+
+    private final ProductRedisRepository productRedisRepository;
 
     /**
      * 상품 ID를 기반으로 상품 상세 정보를 조회합니다.
@@ -174,14 +178,33 @@ public class ProductService {
     }
 
     // 인기 상품 조회
-    @Cacheable(
-            cacheNames = CACHE_NAME,
-            key = "#daysAgo.toString().replace('-', '')",
-            unless = "#result == null or #result.list == null or #result.list.empty"
-    )
     @Transactional(readOnly = true)
     public ProductInfo.ProductSalesData getTopSellingProducts(LocalDate daysAgo, long limit) {
-        List<ProductInfo.TopSelling> topSelling = productRepository.findTopSellingProducts(daysAgo, limit).stream()
+
+        // 캐시에서 인기 상품 조회
+        Set<ZSetOperations.TypedTuple<String>> cachedProductIds = productRedisRepository.getAllTopSellingProductsFromCache();
+
+        List<ProductInfo.TopSelling> topSelling = new ArrayList<>();
+
+        if (!CollectionUtils.isEmpty(cachedProductIds)) {
+            for (ZSetOperations.TypedTuple<String> entry : cachedProductIds) {
+                // 상품 ID와 판매 수량(score)을 가져옵니다.
+                String productId = entry.getValue();
+                Long salesCount = entry.getScore().longValue();  // 판매 수량(score)
+
+                // 상품 ID로 DB에서 상품 정보를 조회
+                Product productById = productRepository.findProductById(Long.parseLong(productId))
+                        .orElseThrow(() -> new BusinessException(BusinessError.PRODUCT_NOT_FOUND));
+
+                // 판매 수량(salesCount)과 함께 TopSelling 객체를 생성하여 리스트에 추가
+                topSelling.add(ProductInfo.TopSelling.from(Long.parseLong(productId), productById.getName(), salesCount));
+            }
+
+            return ProductInfo.ProductSalesData.builder()
+                    .list(topSelling)
+                    .build();
+        }
+        topSelling = productRepository.findTopSellingProducts(daysAgo, limit).stream()
                 .map(ProductQuery.TopSelling::to)
                 .toList();
 
@@ -190,15 +213,45 @@ public class ProductService {
                 .build();
     }
 
-    @CachePut(
-            cacheNames = CACHE_NAME,
-            key = "#daysAgo.toString().replace('-', '')"
-    )
-    public ProductInfo.ProductSalesData refreshTopSellingProductsCache(LocalDate daysAgo, long limit) {
+    public void refreshTopSellingProductsCache(LocalDate daysAgo, long limit) {
 
-        return new ProductInfo.ProductSalesData(productRepository.findTopSellingProducts(daysAgo, limit).stream()
-                .map(ProductQuery.TopSelling::to)
-                .toList());
+        // 상품 판매 데이터를 DB에서 가져옵니다.
+        List<ProductQuery.TopSelling> topSellingProducts = productRepository.findTopSellingProducts(daysAgo, limit);
+
+        // Redis Sorted Set에 상품 데이터를 저장
+        topSellingProducts.forEach(productSignal -> {
+            productRedisRepository.addTopSellingProductToCache(productSignal.productId(), productSignal.salesCount());
+        });
+    }
+
+    @Transactional
+    public void storeProductSignal(List<ProductCommand.ProductSignal> productSignalList) {
+
+        for (ProductCommand.ProductSignal productSignal : productSignalList) {
+            Optional<ProductSignal> signal = productRepository.findProductSignalByDateAndProductId(
+                    productSignal.getDate(),
+                    productSignal.getProductId()
+            );
+
+            signal.ifPresentOrElse(
+                    existingProductSignal -> {
+                        existingProductSignal.incrementOrderCount(productSignal.getQuantity());
+                    },
+                    () -> {
+                        // 조회 결과가 없으면 저장
+                        ProductSignal newProductSignal = ProductSignal.builder()
+                                .productId(productSignal.getProductId())
+                                .date(productSignal.getDate())
+                                .name(productSignal.getName())
+                                .orderCount(productSignal.getQuantity())
+                                .build();
+
+                        productRepository.saveProductSignal(newProductSignal);
+                    }
+            );
+
+        }
+
     }
 
 }

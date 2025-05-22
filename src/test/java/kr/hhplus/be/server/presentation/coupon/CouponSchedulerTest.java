@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CouponSchedulerTest {
 
     @Autowired
-    private CouponScheduler sut;
+    private CouponScheduler couponScheduler;
 
     @Autowired
     private EntityManager entityManager;
@@ -64,7 +64,7 @@ class CouponSchedulerTest {
         entityManager.persist(userCoupon);
 
         // 스케줄러 트리거가 만료된 쿠폰을 처리하는 로직이 있을 경우 이를 호출
-        sut.expireCoupons();
+        couponScheduler.expireCoupons();
 
         // when
         List<UserCoupon> expiredCoupons = couponRepository.findUserCouponsByExpiredDate(LocalDateTime.now());

@@ -17,6 +17,7 @@ import static kr.hhplus.be.server.domain.order.QOrder.order;
 import static kr.hhplus.be.server.domain.order.QOrderItem.orderItem;
 import static kr.hhplus.be.server.domain.product.QProduct.product;
 import static kr.hhplus.be.server.domain.product.QProductOption.productOption;
+import static kr.hhplus.be.server.domain.product.QProductSignal.productSignal;
 import static kr.hhplus.be.server.domain.product.QStock.stock;
 
 @RequiredArgsConstructor
@@ -26,6 +27,7 @@ public class ProductRepositoryImpl implements ProductRepository {
     private final ProductJpaRepository productJpaRepository;
     private final ProductOptionJpaRepository productOptionJpaRepository;
     private final StockJpaRepository stockJpaRepository;
+    private final ProductSignalJpaRepository productSignalJpaRepository;
     private final JPAQueryFactory queryFactory;
 
     @Override
@@ -64,31 +66,6 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public List<ProductQuery.TopSelling> findTopSellingProducts(LocalDate daysAgo, long limit) {
-        NumberExpression<Long> salesCount = orderItem.quantity.sum().castToNum(Long.class);
-        LocalDateTime dateTime = LocalDateTime.of(daysAgo, LocalTime.MIN);
-
-        return queryFactory
-                .select(new QProductQuery_TopSelling(
-                        product.id,
-                        product.name,
-                        salesCount
-                ))
-                .from(product)
-                .join(productOption).on(product.id.eq(productOption.productId))
-                .join(orderItem).on(productOption.id.eq(orderItem.optionId))
-                .join(order).on(order.id.eq(orderItem.orderId))
-                .where(
-                        order.status.eq(Order.Status.SUCCESS),
-                        order.orderDate.goe(dateTime)
-                )
-                .groupBy(product.id)
-                .orderBy(salesCount.desc())
-                .limit(limit)
-                .fetch();
-    }
-
-    @Override
     public List<ProductQuery.PriceOption> findProductOptionsById(List<Long> optionIds) {
         return queryFactory
                 .select(new QProductQuery_PriceOption(
@@ -111,5 +88,30 @@ public class ProductRepositoryImpl implements ProductRepository {
     @Override
     public List<ProductOption> saveProductOption(List<ProductOption> product) {
         return productOptionJpaRepository.saveAll(product);
+    }
+
+    @Override
+    public void saveProductSignal(ProductSignal productSignal) {
+        productSignalJpaRepository.save(productSignal);
+    }
+
+    @Override
+    public Optional<ProductSignal> findProductSignalByDateAndProductId(LocalDate date, Long productId) {
+        return productSignalJpaRepository.findByDateAndProductId(date, productId);
+    }
+
+    @Override
+    public List<ProductQuery.TopSelling> findTopSellingProducts(LocalDate daysAgo, long limit) {
+        return queryFactory
+                .select(new QProductQuery_TopSelling(
+                        productSignal.productId.as("productId"),
+                        productSignal.name,
+                        productSignal.orderCount
+                ))
+                .from(productSignal)
+                .where(productSignal.date.goe(daysAgo))
+                .orderBy(productSignal.orderCount.desc())
+                .limit(limit)
+                .fetch();
     }
 }

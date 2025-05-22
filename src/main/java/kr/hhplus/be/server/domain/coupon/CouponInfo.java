@@ -34,6 +34,20 @@ public final class CouponInfo {
 
     @Getter
     @Builder
+    public static class CouponActivation {
+        private long userId;
+        private long couponId;
+
+        public static CouponActivation from(long userId, long couponId) {
+            return CouponActivation.builder()
+                    .userId(userId)
+                    .couponId(couponId)
+                    .build();
+        }
+    }
+
+    @Getter
+    @Builder
     public static class OwnedCoupon {
         private long userCouponId;
         private long couponId;
@@ -45,4 +59,21 @@ public final class CouponInfo {
         private boolean used;
 
     }
+
+    @Getter
+    @Builder
+    public static class AvailableCoupon {
+        private Long couponId;
+        private Long quantity;
+        private Coupon.Status status;
+
+        public static AvailableCoupon from(Coupon coupon) {
+            return AvailableCoupon.builder()
+                    .couponId(coupon.getId())
+                    .quantity(coupon.getQuantity())
+                    .status(coupon.getStatus())
+                    .build();
+        }
+
     }
+}

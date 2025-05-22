@@ -3,7 +3,6 @@ package kr.hhplus.be.server.presentation.coupon;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.hhplus.be.server.application.coupon.CouponFacade;
 import kr.hhplus.be.server.application.coupon.CouponResult;
-import kr.hhplus.be.server.common.exception.BusinessError;
 import kr.hhplus.be.server.common.exception.BusinessException;
 import kr.hhplus.be.server.common.web.ExceptionTranslator;
 import org.junit.jupiter.api.DisplayName;
@@ -47,7 +46,7 @@ class CouponControllerTest {
         String content = objectMapper.writeValueAsString(request);
 
         // when
-        CouponResult.IssuedCoupon issuedCoupon = CouponResult.IssuedCoupon.builder()
+        CouponResult.IssuedCoupon issuedCouponDetail = CouponResult.IssuedCoupon.builder()
                 .userCouponId(23L)
                 .couponId(36L)
                 .couponName("선착순 쿠폰")
@@ -57,7 +56,7 @@ class CouponControllerTest {
                 .build();
 
         when(couponFacade.issueCoupon(any()))
-                .thenReturn(issuedCoupon);
+                .thenReturn(issuedCouponDetail);
 
         // then
         mockMvc.perform(post("/api/v1/coupons")
