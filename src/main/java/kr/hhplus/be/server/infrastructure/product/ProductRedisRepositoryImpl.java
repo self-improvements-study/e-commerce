@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.infrastructure.product;
 
-import kr.hhplus.be.server.domain.product.ProductRedisRepository;
+import kr.hhplus.be.server.domain.product.ProductRankRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
@@ -11,7 +11,7 @@ import java.util.Set;
 
 @Repository
 @RequiredArgsConstructor
-public class ProductRedisRepositoryImpl implements ProductRedisRepository {
+public class ProductRedisRepositoryImpl implements ProductRankRepository {
 
     private final RedisTemplate<String, String> redisTemplate;
 

@@ -31,11 +31,11 @@ class OrderServiceTest {
     @Mock
     OrderValidators orderValidators;
 
+    @Mock
+    OrderEventPublisher orderEventPublisher;
+
     @InjectMocks
     OrderService orderService;
-
-    @Mock
-    OrderExternalClient orderExternalClient;
 
     @Nested
     @DisplayName("findOrderByOrderId 테스트")
