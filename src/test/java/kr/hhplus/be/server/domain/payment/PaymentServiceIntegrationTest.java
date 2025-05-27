@@ -14,6 +14,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -49,7 +52,14 @@ class PaymentServiceIntegrationTest {
                     .sample();
             entityManager.persist(order);
 
-            PaymentCommand.Payment command = new PaymentCommand.Payment(order.getId(), order.getTotalPrice());
+            PaymentCommand.Payment command = new PaymentCommand.Payment(
+                    1L,
+                    order.getId(),
+                    order.getTotalPrice(),
+                    List.of(new PaymentCommand.Payment.OptionStock(1L, 1)),
+                    List.of(new PaymentCommand.Payment.ProductSignal(1L, LocalDate.now(), "foo", 1)),
+                    List.of(new PaymentCommand.Payment.UserCoupon(1L))
+            );
 
             // when
             PaymentInfo.PaymentSummary result = sut.payment(command);
@@ -80,7 +90,14 @@ class PaymentServiceIntegrationTest {
                     .sample();
             entityManager.persist(order);
 
-            PaymentCommand.Payment command = new PaymentCommand.Payment(order.getId(), order.getTotalPrice());
+            PaymentCommand.Payment command = new PaymentCommand.Payment(
+                    1L,
+                    order.getId(),
+                    order.getTotalPrice(),
+                    List.of(new PaymentCommand.Payment.OptionStock(1L, 1)),
+                    List.of(new PaymentCommand.Payment.ProductSignal(1L, LocalDate.now(), "foo", 1)),
+                    List.of(new PaymentCommand.Payment.UserCoupon(1L))
+            );
 
             // when & then
             assertThatThrownBy(() -> sut.payment(command))

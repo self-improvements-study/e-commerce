@@ -10,7 +10,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,7 +38,14 @@ class PaymentServiceTest {
         @DisplayName("결제 정보 저장 성공")
         void success1() {
             // given
-            PaymentCommand.Payment command = PaymentCommand.Payment.of(1L, 1000L);
+            PaymentCommand.Payment command = new PaymentCommand.Payment(
+                    1L,
+                    1L,
+                    1000L,
+                    List.of(new PaymentCommand.Payment.OptionStock(1L, 1)),
+                    List.of(new PaymentCommand.Payment.ProductSignal(1L, LocalDate.now(), "foo", 1)),
+                    List.of(new PaymentCommand.Payment.UserCoupon(1L))
+            );
             Payment payment = Payment.builder()
                     .id(1L)
                     .orderId(command.getOrderId())

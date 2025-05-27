@@ -18,4 +18,10 @@ public class OrderEventSpringPublisher implements OrderEventPublisher {
     public void publish(OrderEvent.Send event) {
         eventPublisher.publishEvent(event);
     }
+
+    @Override
+    public void publish(OrderEvent.CreateOrder event) {
+        eventPublisher.publishEvent(event);
+    }
+
 }

@@ -4,4 +4,5 @@ public interface OrderEventPublisher {
 
     void publish(OrderEvent.Send event);
 
+    void publish(OrderEvent.CreateOrder event);
 }

@@ -91,6 +91,10 @@ public class OrderService {
 
         List<OrderItem> savedOrderItems = orderRepository.saveOrderItem(orderItems);
 
+        OrderEvent.CreateOrder event = OrderEvent.CreateOrder.from(savedOrder, items);
+
+        orderEventPublisher.publish(event);
+
         return OrderInfo.OrderSummary.from(savedOrder, savedOrderItems);
     }
 

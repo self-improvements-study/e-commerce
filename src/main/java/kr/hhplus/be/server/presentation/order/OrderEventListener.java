@@ -8,6 +8,7 @@ import kr.hhplus.be.server.domain.order.OrderEvent;
 import kr.hhplus.be.server.domain.order.OrderExternalClient;
 import kr.hhplus.be.server.domain.order.OrderPaymentWaitedEvent;
 import kr.hhplus.be.server.domain.order.OrderService;
+import kr.hhplus.be.server.domain.payment.PaymentEvent;
 import kr.hhplus.be.server.domain.product.StockDecreaseEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @RequiredArgsConstructor
 public class OrderEventListener {
 
+    private final OrderService orderService;
     private final OrderExternalClient orderExternalClient;
 
     @Async
@@ -28,6 +30,17 @@ public class OrderEventListener {
     public void sendOrderData(OrderEvent.Send event) {
         // 외부 플랫폼 데이터 전송
         orderExternalClient.sendOrder(event);
+    }
+
+
+    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    public void changeOrderStatusAsSuccess(PaymentEvent.CreatePayment event) {
+        orderService.success(event.getOrderId());
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
+    public void changeOrderStatusAsCancel(PaymentEvent.CreatePayment event) {
+        orderService.cancel(event.getOrderId());
     }
 
 }
