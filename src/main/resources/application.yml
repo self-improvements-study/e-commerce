@@ -20,8 +20,37 @@ spring:
     properties:
       hibernate.timezone.default_storage: NORMALIZE_UTC
       hibernate.jdbc.time_zone: UTC
+      hibernate:
+        format_sql: true
+
+  kafka:
+    bootstrap-servers: localhost:9094
+    properties:
+      spring.json.trusted.packages: kr.hhplus.be.server.*
+      request.timeout.ms: 20000
+      retry.backoff.ms: 500
+      auto:
+        create.topics.enable: false
+        register.schemas: false
+        offset.reset: latest
+      use.latest.version: true
+      basic.auth.credentials.source: USER_INFO
+    producer:
+      client-id: e-commerce
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      retries: 5
+    consumer:
+      group-id: e-commerce
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        enable-auto-commit: false
+    listener:
+      ack-mode: manual
 
 ---
+
 spring.config.activate.on-profile: local, test
 
 spring:
