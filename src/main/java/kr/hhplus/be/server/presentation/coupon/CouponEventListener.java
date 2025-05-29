@@ -1,21 +1,18 @@
 package kr.hhplus.be.server.presentation.coupon;
 
-import kr.hhplus.be.server.common.event.EventFlowManager;
-import kr.hhplus.be.server.common.event.EventFlowState;
-import kr.hhplus.be.server.common.event.OrderEventFlow;
 import kr.hhplus.be.server.domain.coupon.CouponCommand;
+import kr.hhplus.be.server.domain.coupon.CouponEvent;
 import kr.hhplus.be.server.domain.coupon.CouponService;
-import kr.hhplus.be.server.domain.order.OrderCreatedEvent;
-import kr.hhplus.be.server.domain.order.OrderEvent;
-import kr.hhplus.be.server.domain.payment.PaymentEvent;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.List;
-import java.util.Objects;
+
+import static kr.hhplus.be.server.domain.coupon.CouponCommand.IssuedCouponBatch.*;
 
 @Component
 @RequiredArgsConstructor
@@ -23,27 +20,17 @@ public class CouponEventListener {
 
     private final CouponService couponService;
 
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    public void useCoupon(OrderEvent.CreateOrder event) {
+    @KafkaListener(topics = "coupon.v1.issue", batch = "true")
+    public void consume(List<CouponEvent.issued> event, Acknowledgment ack,
+                        @Header(KafkaHeaders.RECEIVED_KEY) List<String> key
+    ) {
 
-        List<Long> userCouponIds = event.getOrderItem().stream()
-                .map(OrderEvent.CreateOrder.Item::getUserCouponId)
-                .filter(Objects::nonNull)
-                .toList();
+        String couponId = key.get(0);
+        CouponCommand.IssuedCouponBatch command = from(Long.valueOf(couponId), event);
 
-        couponService.use(CouponCommand.Use.of(userCouponIds));
+        couponService.issueCoupon(command);
 
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
-    public void cancelCoupon(PaymentEvent.CreatePayment event) {
-
-        List<Long> userCouponIds = event.getUserCouponList().stream()
-                .map(PaymentEvent.CreatePayment.UserCoupon::getUserCouponId)
-                .filter(Objects::nonNull)
-                .toList();
-
-        couponService.cancel(CouponCommand.Cancel.of(userCouponIds));
+        ack.acknowledge();
 
     }
 

@@ -31,4 +31,8 @@ public interface CouponRepository {
     Optional<Coupon> findByIdForUpdate(Long couponId, Coupon.Status status);
 
     long countUserCouponByCouponId(Long couponId);
+
+    void saveAll(List<UserCoupon> userCoupons);
+
+    List<UserCoupon> findUserCouponsByCouponId(Long couponId);
 }
