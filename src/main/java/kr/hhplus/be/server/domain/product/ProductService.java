@@ -2,6 +2,7 @@ package kr.hhplus.be.server.domain.product;
 
 import kr.hhplus.be.server.common.exception.BusinessError;
 import kr.hhplus.be.server.common.exception.BusinessException;
+import kr.hhplus.be.server.common.redisson.DistributedLock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
@@ -50,7 +51,7 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductInfo.PriceOption> getProductOptionsById(ProductCommand.OptionIds command) {
+    public List<ProductInfo.PriceOption> getProductOptionsById(ProductCommand.OptionId command) {
         List<Long> optionIds = command.getOptionIds();
 
         List<ProductQuery.PriceOption> options = productRepository.findProductOptionsById(optionIds);

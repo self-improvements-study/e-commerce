@@ -74,11 +74,11 @@ public final class ProductCommand {
 
     @Getter
     @Builder
-    public static class OptionIds {
+    public static class OptionId {
         private List<Long> optionIds;
 
-        public static OptionIds of(List<Long> optionIds) {
-            return OptionIds.builder()
+        public static OptionId of(List<Long> optionIds) {
+            return OptionId.builder()
                     .optionIds(optionIds)
                     .build();
         }

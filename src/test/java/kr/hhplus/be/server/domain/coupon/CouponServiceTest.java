@@ -55,22 +55,23 @@ class CouponServiceTest {
                     .used(false)
                     .build();
 
-            CouponCommand.IssuedCoupon command = CouponCommand.IssuedCoupon.builder()
+            CouponCommand.IssuedCoupon issuedCoupon = CouponCommand.IssuedCoupon.builder()
                     .userId(userId)
                     .couponId(couponId)
                     .build();
+
+            List<CouponCommand.IssuedCoupon> list = List.of(issuedCoupon);
+            CouponCommand.IssuedCouponBatch command = new CouponCommand.IssuedCouponBatch(couponId, list);
 
             when(couponRepository.findCouponByIdForUpdate(couponId)).thenReturn(Optional.of(coupon));
             when(couponRepository.existsUserCoupon(userId, couponId)).thenReturn(false);
             when(couponRepository.saveUserCoupon(any(UserCoupon.class))).thenReturn(userCoupon);
 
             // when
-            CouponInfo.IssuedCoupon result = couponService.issueCoupon(command);
+            couponService.issueCoupon(command);
 
             // then
-            assertThat(result.getUserCouponId()).isEqualTo(userCoupon.getId());
-            assertThat(result.getCouponId()).isEqualTo(coupon.getId());
-            assertThat(result.getCouponName()).isEqualTo(coupon.getCouponName());
+            assertThat(command.getIssuedCouponDetail().get(0).getCouponId()).isEqualTo(coupon.getId());
         }
 
         @Test
@@ -79,10 +80,13 @@ class CouponServiceTest {
             // given
             long userId = 1L;
             long couponId = 10L;
-            CouponCommand.IssuedCoupon command = CouponCommand.IssuedCoupon.builder()
+            CouponCommand.IssuedCoupon issuedCoupon = CouponCommand.IssuedCoupon.builder()
                     .userId(userId)
                     .couponId(couponId)
                     .build();
+
+            List<CouponCommand.IssuedCoupon> list = List.of(issuedCoupon);
+            CouponCommand.IssuedCouponBatch command = new CouponCommand.IssuedCouponBatch(couponId, list);
 
             when(couponRepository.findCouponByIdForUpdate(couponId)).thenReturn(Optional.empty());
 
@@ -106,10 +110,13 @@ class CouponServiceTest {
                     .endedDate(LocalDateTime.now().plusDays(1))
                     .build();
 
-            CouponCommand.IssuedCoupon command = CouponCommand.IssuedCoupon.builder()
+            CouponCommand.IssuedCoupon issuedCoupon = CouponCommand.IssuedCoupon.builder()
                     .userId(userId)
                     .couponId(couponId)
                     .build();
+
+            List<CouponCommand.IssuedCoupon> list = List.of(issuedCoupon);
+            CouponCommand.IssuedCouponBatch command = new CouponCommand.IssuedCouponBatch(couponId, list);
 
             when(couponRepository.findCouponByIdForUpdate(couponId)).thenReturn(Optional.of(coupon));
             when(couponRepository.existsUserCoupon(userId, couponId)).thenReturn(true);

@@ -65,6 +65,7 @@ public class OrderFacade {
         }
 
         // 4. 실제 도메인 서비스에 넘길 커맨드 데이터 준비
+        List<ProductCommand.OptionStock> optionStocks = new ArrayList<>();
         List<OrderCommand.Item> orderItems = new ArrayList<>();
 
         for (int i = 0; i < items.size(); i++) {
@@ -72,6 +73,10 @@ public class OrderFacade {
             OrderCriteria.Item item = items.get(i);
             ProductInfo.PriceOption option = productOptions.get(i);
             CouponInfo.OwnedCoupon userCoupon = userCouponMap.get(item.getUserCouponId());
+
+            // 4-1. 재고 차감을 위한 옵션 정보 생성
+            ProductCommand.OptionStock optionStock = ProductCommand.OptionStock
+                    .of(item.getOptionId(), item.getQuantity());optionStocks.add(optionStock);
 
             // 4-3. 주문 생성을 위한 주문 아이템 정보 생성
             OrderCommand.Item orderItem = OrderCommand.Item
@@ -81,7 +86,10 @@ public class OrderFacade {
             orderItems.add(orderItem);
         }
 
-        // 7. 주문 생성 요청
+        // 5. 재고 차감 수행
+        productService.decreaseStockQuantity(ProductCommand.DecreaseStock.of(optionStocks));
+
+        // 6. 주문 생성 요청
         OrderInfo.OrderSummary info = orderService.order(
                 OrderCommand.Detail.of(criteria.getUserId(), orderItems));
 
