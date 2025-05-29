@@ -52,15 +52,4 @@ public class ProductEventListener {
 
     }
 
-    @Async
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
-    public void increaseStock(PaymentEvent.CreatePayment event) {
-
-        List<ProductCommand.OptionStock> optionStocks = event.getOptionStockList().stream()
-                .map(v -> ProductCommand.OptionStock.of(v.getOptionId(), v.getQuantity()))
-                .toList();
-
-        productService.increaseStockQuantity(ProductCommand.IncreaseStock.of(optionStocks));
-    }
-
 }

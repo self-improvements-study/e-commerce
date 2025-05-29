@@ -59,6 +59,8 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:mysql")
     testImplementation("com.redis:testcontainers-redis:2.2.2")
+    testImplementation("org.testcontainers:kafka")
+    testImplementation("org.springframework.kafka:spring-kafka-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Fixture Monkey
@@ -69,6 +71,9 @@ dependencies {
 
     // Jetbrains Annotations
     compileOnly("org.jetbrains:annotations:26.0.2")
+
+    // kafka
+    implementation("org.springframework.kafka:spring-kafka")
 }
 
 tasks.withType<Test> {

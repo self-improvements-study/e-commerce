@@ -12,15 +12,32 @@ public class CouponCommand {
 
     @Getter
     @Builder
+    public static class IssuedCouponBatch {
+
+        Long couponId;
+        List<IssuedCoupon> issuedCouponDetail;
+
+        public static IssuedCouponBatch from(Long couponId, List<CouponEvent.issued>  detail) {
+            return IssuedCouponBatch.builder()
+                    .couponId(couponId)
+                    .issuedCouponDetail(detail
+                            .stream()
+                            .map(v -> IssuedCoupon.from(v.getCouponId(), v.getUserId()))
+                            .toList())
+                    .build();
+        }
+    }
+
+    @Getter
+    @Builder
     public static class IssuedCoupon {
         long userId;
         long couponId;
 
-        public UserCoupon toEntity() {
-            return UserCoupon.builder()
+        public static IssuedCoupon from(Long couponId, Long userId) {
+            return IssuedCoupon.builder()
                     .userId(userId)
                     .couponId(couponId)
-                    .used(false)
                     .build();
         }
     }

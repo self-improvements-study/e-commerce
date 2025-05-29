@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 public class OrderExternalClientImpl implements OrderExternalClient {
 
     @Override
-    public void sendOrder(OrderEvent.Send event) {
+    public void sendOrder(OrderEvent.OrderCompleted event) {
         log.info("send order: {}", event);
     }
 
