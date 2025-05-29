@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -19,6 +20,8 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ActiveProfiles("test")
 @Transactional
@@ -34,6 +37,9 @@ class CouponServiceIntegrationTest {
 
     @Autowired
     private CouponApplyRepository couponRedisRepository;
+
+    @MockitoBean
+    private CouponEventPublisher couponEventPublisher;
 
     @Nested
     @DisplayName("issueCoupon 테스트")
@@ -60,20 +66,21 @@ class CouponServiceIntegrationTest {
                     .sample();
             entityManager.persist(coupon);
 
-            CouponCommand.IssuedCoupon command = new CouponCommand.IssuedCoupon(user.getId(), coupon.getId());
+
+            CouponCommand.IssuedCoupon issuedCoupon = new CouponCommand.IssuedCoupon(user.getId(), coupon.getId());
+
+            List<CouponCommand.IssuedCoupon> list = List.of(issuedCoupon);
+            CouponCommand.IssuedCouponBatch command = new CouponCommand.IssuedCouponBatch(coupon.getId(), list);
 
             // when
-            CouponInfo.IssuedCoupon result = sut.issueCoupon(command);
+            sut.issueCoupon(command);
 
             // then
             List<CouponInfo.OwnedCoupon> userCoupons = sut.findUserCoupons(user.getId())
                     .stream()
                     .filter(v -> v.getCouponId() == coupon.getId()).toList();
 
-            assertThat(result).isNotNull();
-            assertThat(result.getCouponId()).isEqualTo(coupon.getId());
-            assertThat(result.getCouponName()).isNotBlank();
-            assertThat(userCoupons.get(0).getCouponId()).isEqualTo(result.getCouponId());
+            assertThat(userCoupons.get(0).getCouponId()).isEqualTo(coupon.getId());
         }
 
         @Test
@@ -82,7 +89,11 @@ class CouponServiceIntegrationTest {
             // given
             long userId = RandomGenerator.nextPositiveLong(Long.MAX_VALUE);
             long invalidCouponId = RandomGenerator.nextPositiveLong(Long.MAX_VALUE);
-            CouponCommand.IssuedCoupon command = new CouponCommand.IssuedCoupon(userId, invalidCouponId);
+
+            CouponCommand.IssuedCoupon issuedCoupon = new CouponCommand.IssuedCoupon(userId, invalidCouponId);
+
+            List<CouponCommand.IssuedCoupon> list = List.of(issuedCoupon);
+            CouponCommand.IssuedCouponBatch command = new CouponCommand.IssuedCouponBatch(invalidCouponId, list);
 
             // expect
             assertThatThrownBy(() -> sut.issueCoupon(command))
@@ -111,7 +122,10 @@ class CouponServiceIntegrationTest {
                     .sample();
             entityManager.persist(coupon);
 
-            CouponCommand.IssuedCoupon command = new CouponCommand.IssuedCoupon(user.getId(), coupon.getId());
+            CouponCommand.IssuedCoupon issuedCoupon = new CouponCommand.IssuedCoupon(user.getId(), coupon.getId());
+
+            List<CouponCommand.IssuedCoupon> list = List.of(issuedCoupon);
+            CouponCommand.IssuedCouponBatch command = new CouponCommand.IssuedCouponBatch(coupon.getId(), list);
 
             // expect
             assertThatThrownBy(() -> sut.issueCoupon(command))
@@ -148,8 +162,13 @@ class CouponServiceIntegrationTest {
                     .sample();
             entityManager.persist(userCoupon);
 
+            CouponCommand.IssuedCoupon issuedCoupon = new CouponCommand.IssuedCoupon(user.getId(), coupon.getId());
+
+            List<CouponCommand.IssuedCoupon> list = List.of(issuedCoupon);
+            CouponCommand.IssuedCouponBatch command = new CouponCommand.IssuedCouponBatch(coupon.getId(), list);
+
             // expect
-            assertThatThrownBy(() -> sut.issueCoupon(new CouponCommand.IssuedCoupon(user.getId(), coupon.getId())))
+            assertThatThrownBy(() -> sut.issueCoupon(command))
                     .isInstanceOf(BusinessException.class)
                     .hasMessage(BusinessError.COUPON_ALREADY_ISSUED.getMessage());
         }
@@ -450,6 +469,72 @@ class CouponServiceIntegrationTest {
 
             assertThat(couponRequestQueue).hasSize(1);
             assertThat(couponRequestQueue).contains(String.valueOf(couponToQueue.getUserId()));
+
+        }
+    }
+
+    @Nested
+    @DisplayName("유저 선착순 쿠폰 발급 이벤트 발행 테스트")
+    class AddCouponToQueueTest {
+
+        @Test
+        @DisplayName("성공")
+        void success1() {
+
+            // given
+            User user = RandomGenerator.getFixtureMonkey()
+                    .giveMeBuilder(User.class)
+                    .set("id", null)
+                    .build()
+                    .sample();
+            entityManager.persist(user);
+
+            Coupon coupon = RandomGenerator.getFixtureMonkey()
+                    .giveMeBuilder(Coupon.class)
+                    .set("id", null)
+                    .set("quantity", 1L)
+                    .set("endedDate", LocalDateTime.now().plusDays(1))  // 만료된 쿠폰
+                    .set("status", Coupon.Status.AVAILABLE)
+                    .build()
+                    .sample();
+            entityManager.persist(coupon);
+
+            CouponCommand.IssuedCoupon issuedCoupon = CouponCommand.IssuedCoupon.builder()
+                    .userId(user.getId())
+                    .couponId(coupon.getId())
+                    .build();
+
+            // when
+            sut.addCouponToQueue(issuedCoupon);
+
+
+            // then
+            verify(couponEventPublisher, times(1))
+                    .publish(any(CouponEvent.issued.class));
+
+        }
+
+        @Test
+        @DisplayName("실패 - 잘못된 쿠폰 ID로 이벤트 발행하지 않음")
+        void addCouponToQueue() {
+
+            // given
+            long invalidCouponId = RandomGenerator.nextPositiveLong(Long.MAX_VALUE);
+
+            CouponCommand.IssuedCoupon issuedCoupon = CouponCommand.IssuedCoupon.builder()
+                    .userId(1L)
+                    .couponId(invalidCouponId)
+                    .build();
+
+            // when
+
+            // then
+            assertThatThrownBy(() -> sut.addCouponToQueue(issuedCoupon))
+                    .isInstanceOf(BusinessException.class)
+                    .hasMessage(BusinessError.COUPON_NOT_FOUND.getMessage());
+
+            verify(couponEventPublisher, times(0))
+                    .publish(any(CouponEvent.issued.class));
 
         }
     }

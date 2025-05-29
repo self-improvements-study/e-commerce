@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.domain.coupon;
 
-import jakarta.persistence.EntityManager;
 import kr.hhplus.be.server.test.util.RandomGenerator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -62,7 +61,10 @@ class CouponServiceConcurrencyTest {
             // when
             for (int i = 0; i < threadCount; i++) {
                 long userId = i + 1;
-                CouponCommand.IssuedCoupon command = new CouponCommand.IssuedCoupon(userId, saved.getId());
+                CouponCommand.IssuedCoupon issuedCoupon = new CouponCommand.IssuedCoupon(userId, saved.getId());
+                List<CouponCommand.IssuedCoupon> list = List.of(issuedCoupon);
+                CouponCommand.IssuedCouponBatch command = new CouponCommand.IssuedCouponBatch(saved.getId(), list);
+
                 executorService.execute(() -> {
                     try {
                         sut.issueCoupon(command);

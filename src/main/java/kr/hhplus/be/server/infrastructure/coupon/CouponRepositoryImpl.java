@@ -19,6 +19,7 @@ public class CouponRepositoryImpl implements CouponRepository {
     private final CouponJpaRepository couponJpaRepository;
     private final UserCouponJpaRepository userCouponJpaRepository;
     private final JPAQueryFactory queryFactory;
+    private final UserCouponJdbcTemplateRepository userCouponJdbcTemplateRepository;
 
     @Override
     public List<UserCoupon> findUserCouponsById(List<Long> userCouponIds) {
@@ -114,5 +115,15 @@ public class CouponRepositoryImpl implements CouponRepository {
     public long countUserCouponByCouponId(Long couponId) {
         return userCouponJpaRepository.countByCouponId(couponId);
     };
+
+    @Override
+    public void saveAll(List<UserCoupon> userCoupons) {
+        userCouponJdbcTemplateRepository.batchInsert(userCoupons);
+    }
+
+    @Override
+    public List<UserCoupon> findUserCouponsByCouponId(Long couponId) {
+        return userCouponJpaRepository.findAllByCouponId(couponId);
+    }
 
 }

@@ -15,11 +15,6 @@ public class CouponFacade {
 
     private final CouponService couponService;
 
-    public CouponResult.IssuedCoupon issueCoupon(CouponCriteria.IssuedCoupon issuedCoupon) {
-        CouponInfo.IssuedCoupon info = couponService.issueCoupon(issuedCoupon.toCommand());
-        return CouponResult.IssuedCoupon.from(info);
-    }
-
     public CouponResult.CouponActivation addCouponToQueue(CouponCriteria.IssuedCoupon issuedCoupon) {
         CouponInfo.CouponActivation info = couponService.addCouponToQueue(issuedCoupon.toCommand());
 

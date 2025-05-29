@@ -6,6 +6,8 @@ import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.payment.PaymentCommand;
 import kr.hhplus.be.server.domain.payment.PaymentInfo;
 import kr.hhplus.be.server.domain.payment.PaymentService;
+import kr.hhplus.be.server.domain.point.PointService;
+import kr.hhplus.be.server.domain.product.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +21,11 @@ public class PaymentFacade {
 
     private final PaymentService paymentService;
 
+    private final PointService pointService;
+
     private final OrderService orderService;
+
+    private final ProductService productService;
 
     /**
      * 사용자 결제 요청을 처리합니다.
@@ -49,6 +55,7 @@ public class PaymentFacade {
                 .map(item -> PaymentCommand.Payment.OptionStock.of(item.getOptionId(), item.getQuantity()))
                 .toList();
 
+
         // 3. 결제 처리
         PaymentInfo.PaymentSummary paymentInfo = paymentService.payment(
                 PaymentCommand.Payment.of(
@@ -61,7 +68,12 @@ public class PaymentFacade {
                         )
         );
 
-        // 4. 결제 성공 결과 반환
+        pointService.decrease(userId, orderInfo.getTotalAmount());
+
+        // 4. 주문 상태 변경
+        orderService.success(orderId);
+
+        // 6. 결제 성공 결과 반환
         return PaymentResult.PaymentSummary.from(paymentInfo);
     }
 }

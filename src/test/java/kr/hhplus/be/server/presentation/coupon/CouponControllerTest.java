@@ -37,42 +37,7 @@ class CouponControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    @Test
-    @DisplayName("쿠폰 발급")
-    void createUserCoupon() throws Exception {
-        // given
-        CouponRequest.Issue request = new CouponRequest.Issue(100L, 36L);
-        String content = objectMapper.writeValueAsString(request);
-
-        // when
-        CouponResult.IssuedCoupon issuedCouponDetail = CouponResult.IssuedCoupon.builder()
-                .userCouponId(23L)
-                .couponId(36L)
-                .couponName("선착순 쿠폰")
-                .discount(3000)
-                .startedDate(LocalDateTime.now())
-                .endedDate(LocalDateTime.now().plusDays(7))
-                .build();
-
-        when(couponFacade.issueCoupon(any()))
-                .thenReturn(issuedCouponDetail);
-
-        // then
-        mockMvc.perform(post("/api/v1/coupons")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(content))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.message").value("Success"))
-                .andExpect(jsonPath("$.data.userCouponId").value(23))
-                .andExpect(jsonPath("$.data.couponId").value(36))
-                .andExpect(jsonPath("$.data.couponName").value("선착순 쿠폰"))
-                .andExpect(jsonPath("$.data.discount").value(3000))
-                .andExpect(jsonPath("$.data.startedDate").exists())
-                .andExpect(jsonPath("$.data.endedDate").exists());
-    }
-
+    
     @Test
     @DisplayName("유저 쿠폰 조회")
     void findUserCoupons() throws Exception {

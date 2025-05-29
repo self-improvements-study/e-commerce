@@ -2,7 +2,6 @@ package kr.hhplus.be.server.domain.coupon;
 
 import kr.hhplus.be.server.common.exception.BusinessError;
 import kr.hhplus.be.server.common.exception.BusinessException;
-import kr.hhplus.be.server.common.redisson.DistributedLock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,54 +23,73 @@ public class CouponService {
 
     private final TransactionTemplate transactionTemplate;
 
-    /**
-     * 사용자가 쿠폰을 발급받습니다.
-     *
-     * @param command 쿠폰 발급 요청 정보 (유저 ID, 쿠폰 ID 포함)
-     * @return 발급된 유저 쿠폰 정보
-     * @throws BusinessException 쿠폰 없음, 재고 부족, 중복 발급 시 예외 발생
-     */
-    @Transactional
-    @DistributedLock(
-            topic = "coupon",
-            keyExpression = "#command.couponId",
-            waitTime = 5,
-            leaseTime = 3
-    )
-    public CouponInfo.IssuedCoupon issueCoupon(CouponCommand.IssuedCoupon command) {
-        Coupon coupon = couponRepository.findCouponByIdForUpdate(command.getCouponId())
-                .orElseThrow(() -> new BusinessException(BusinessError.COUPON_NOT_FOUND));
-
-        // 재고 체크
-        if (coupon.getQuantity() <= 0) {
-            throw new BusinessException(BusinessError.COUPON_ISSUE_LIMIT_EXCEEDED);
-        }
-
-        // 중복 발급 체크
-        boolean alreadyIssued = couponRepository.existsUserCoupon(command.getUserId(), command.getCouponId());
-        if (alreadyIssued) {
-            throw new BusinessException(BusinessError.COUPON_ALREADY_ISSUED);
-        }
-
-        // 쿠폰 수량 차감
-        coupon.decrease(1L);
-
-        // 유저 쿠폰 생성
-        UserCoupon savedUserCoupon = couponRepository.saveUserCoupon(command.toEntity());
-
-        return CouponInfo.IssuedCoupon.from(savedUserCoupon, coupon);
-    }
+    private final CouponEventPublisher couponEventPublisher;
 
     @Transactional
     public CouponInfo.CouponActivation addCouponToQueue(CouponCommand.IssuedCoupon command) {
 
-        Boolean added = couponApplyRepository.addCouponRequestToQueue(command.getUserId(), command.getCouponId());
+        // 1. 주어진 CouponId로 쿠폰을 조회하고, 없으면 예외를 발생시킴
+        Coupon couponById = couponRepository.findCouponById(command.getCouponId())
+                .orElseThrow(() -> new BusinessException(BusinessError.COUPON_NOT_FOUND));
 
-        if (!added) {
-            throw new BusinessException(BusinessError.REDIS_OPERATION_FAILED);
+        // 2. 쿠폰의 잉여 수량을 확인하여 0 이하일 경우 발급 불가 처리
+        if (couponById.getQuantity() <= 0) {
+            throw new BusinessException(BusinessError.COUPON_ISSUE_LIMIT_EXCEEDED);  // 발급 한도를 초과한 경우 예외 발생
         }
 
+        // 3. 쿠폰 발급 이벤트 생성. 쿠폰 ID와 사용자 ID를 포함한 이벤트를 생성
+        CouponEvent.issued event = CouponEvent.issued.from(couponById.getId(), command.getUserId());
+
+        // 4. 쿠폰 발급 이벤트를 발행하여, 외부 시스템 혹은 다른 서비스에서 이 이벤트를 수신하도록 함
+        couponEventPublisher.publish(event);
+
+        // 5. 쿠폰 발급을 완료하고, 발급된 쿠폰의 정보를 반환
         return CouponInfo.CouponActivation.from(command.getUserId(), command.getCouponId());
+    }
+
+    @Transactional
+    public void issueCoupon(CouponCommand.IssuedCouponBatch command) {
+
+        // 1. 주어진 CouponId로 쿠폰을 조회하고, 없으면 예외를 발생시킴
+        Coupon coupon = couponRepository.findCouponById(command.getCouponId())
+                .orElseThrow(() -> new BusinessException(BusinessError.COUPON_NOT_FOUND));
+
+        // 2. 쿠폰의 잉여 수량을 확인하여 0 이하일 경우 발급 불가 처리
+        if (coupon.getQuantity() <= 0) {
+            throw new BusinessException(BusinessError.COUPON_ISSUE_LIMIT_EXCEEDED);
+        }
+
+        // 3. 발급할 쿠폰 수를 제한 (쿠폰 수량만큼 유저에게 발급)
+        List<CouponCommand.IssuedCoupon> limit = command.getIssuedCouponDetail()
+                .stream()
+                .limit(coupon.getQuantity())
+                .toList();
+
+        // 4. 이미 발급된 유저의 쿠폰 ID를 조회하여 중복 발급을 방지
+        Set<Long> existCouponUserIds = couponRepository.findUserCouponsByCouponId(command.couponId)
+                .stream()  // 이미 발급된 사용자들의 쿠폰 ID를 가져오기
+                .map(UserCoupon::getUserId)
+                .collect(Collectors.toSet());
+
+        // 5. 중복되지 않는 유저에게만 새로운 UserCoupon 객체 생성하여 발급 대기 리스트에 추가
+        List<UserCoupon> userCoupons = limit
+                .stream()
+                .filter(v -> !existCouponUserIds.contains(v.getUserId()))  // 이미 발급된 유저는 제외
+                .map(v -> UserCoupon.builder()
+                        .couponId(v.getCouponId())
+                        .userId(v.getUserId())
+                        .used(false)
+                        .build())
+                .toList();
+
+        // 6. 발급된 쿠폰 수만큼 수량 감소
+        coupon.decrease(userCoupons.size());
+
+        // 7. 쿠폰 수량을 감소시키고 데이터베이스에 반영
+        couponRepository.save(coupon);
+
+        // 8. 새로 생성된 UserCoupon 객체들을 저장하여 발급 처리
+        couponRepository.saveAll(userCoupons);
     }
 
     @Transactional(readOnly = true)

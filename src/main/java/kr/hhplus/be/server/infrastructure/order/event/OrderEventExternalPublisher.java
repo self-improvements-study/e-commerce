@@ -1,21 +1,20 @@
 package kr.hhplus.be.server.infrastructure.order.event;
 
-import kr.hhplus.be.server.domain.order.OrderCreatedEvent;
 import kr.hhplus.be.server.domain.order.OrderEvent;
 import kr.hhplus.be.server.domain.order.OrderEventPublisher;
-import kr.hhplus.be.server.domain.order.OrderPaymentWaitedEvent;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class OrderEventSpringPublisher implements OrderEventPublisher {
+public class OrderEventExternalPublisher implements OrderEventPublisher {
 
-    private final ApplicationEventPublisher eventPublisher;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
     public void publish(OrderEvent.OrderCompleted event) {
-        eventPublisher.publishEvent(event);
+            kafkaTemplate.send("order.v1.completed", String.valueOf(event.getId()), event);
     }
+
 }

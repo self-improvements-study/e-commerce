@@ -1,7 +1,9 @@
 package kr.hhplus.be.server.domain.order;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -10,7 +12,7 @@ import java.util.List;
 public class OrderEvent {
 
     @Getter
-    public static class Send {
+    public static class OrderCompleted {
 
         private Long id;
 
@@ -24,20 +26,22 @@ public class OrderEvent {
 
         private List<Item> oderItem;
 
-        public static Send from(Order order, List<OrderInfo.OrderItemDetail> items) {
-            Send send = new Send();
-            send.id = order.getId();
-            send.userId = order.getUserId();
-            send.orderDate = order.getOrderDate();
-            send.status = order.getStatus();
-            send.totalPrice = order.getTotalPrice();
-            send.oderItem = items.stream().map(Item::from).toList();
+        public static OrderCompleted from(Order order, List<OrderInfo.OrderItemDetail> items) {
+            OrderCompleted orderCompleted = new OrderCompleted();
+            orderCompleted.id = order.getId();
+            orderCompleted.userId = order.getUserId();
+            orderCompleted.orderDate = order.getOrderDate();
+            orderCompleted.status = order.getStatus();
+            orderCompleted.totalPrice = order.getTotalPrice();
+            orderCompleted.oderItem = items.stream().map(Item::from).toList();
 
-            return send;
+            return orderCompleted;
         }
 
         @Getter
         @Builder
+        @AllArgsConstructor
+        @NoArgsConstructor
         public static class Item {
 
             private long optionId;
@@ -58,8 +62,8 @@ public class OrderEvent {
 
             private LocalDate orderDate;
 
-            public static Send.Item from(OrderInfo.OrderItemDetail detail) {
-                return Send.Item.builder()
+            public static Item from(OrderInfo.OrderItemDetail detail) {
+                return Item.builder()
                         .optionId(detail.getOptionId())
                         .productId(detail.getProductId())
                         .productName(detail.getProductName())
