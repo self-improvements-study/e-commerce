@@ -534,7 +534,7 @@ class OrderServiceIntegrationTest {
             OrderInfo.OrderHistory orderByOrderId = sut.findOrderByOrderId(order.getId());
             assertThat(orderByOrderId.getStatus()).isEqualTo(Order.Status.SUCCESS);
 
-            verify(orderEventPublisher, times(1)).publish(any(OrderEvent.Send.class));
+            verify(orderEventPublisher, times(1)).publish(any(OrderEvent.OrderCompleted.class));
         }
 
         @Test
@@ -548,7 +548,7 @@ class OrderServiceIntegrationTest {
                     .isInstanceOf(BusinessException.class)
                     .hasMessage(BusinessError.ORDER_NOT_FOUND.getMessage());
 
-            verify(orderEventPublisher, times(0)).publish(any(OrderEvent.Send.class));
+            verify(orderEventPublisher, times(0)).publish(any(OrderEvent.OrderCompleted.class));
         }
     }
 

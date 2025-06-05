@@ -1,4 +1,5 @@
-version: '3'
+version: '3.8'
+
 services:
   mysql:
     image: mysql:8.0
@@ -44,6 +45,75 @@ services:
       - kafka
     restart: always
 
+  grafana:
+    image: grafana/grafana:11.6.1  # Grafana Docker 이미지
+    container_name: grafana  # 컨테이너 이름
+    ports:
+      - "3000:3000"  # 3000 포트를 매핑 (호스트:컨테이너)
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin  # 기본 관리자 비밀번호 (필요한 경우)
+    restart: always  # 컨테이너가 중지되면 자동으로 다시 시작
+
+  influxdb:
+    image: influxdb:2
+    ports:
+      - "8086:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME_FILE: /run/secrets/influxdb2-admin-username
+      DOCKER_INFLUXDB_INIT_PASSWORD_FILE: /run/secrets/influxdb2-admin-password
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN_FILE: /run/secrets/influxdb2-admin-token
+      DOCKER_INFLUXDB_INIT_ORG: docs
+      DOCKER_INFLUXDB_INIT_BUCKET: home
+    secrets:
+      - influxdb2-admin-username
+      - influxdb2-admin-password
+      - influxdb2-admin-token
+    volumes:
+      - ./docker/influxdb2:/var/lib/influxdb2
+      - ./docker/influxdb2/config:/etc/influxdb2
+
+#  k6:
+#    image: grafana/xk6
+#    container_name: k6
+#    command: run --out influxdb=http://e-commerce-influxdb-1:8086/k6 /scripts/test.js
+#    volumes:
+#      - ./k6:/scripts
+#    environment:
+#      - K6_PROMETHEUS_RW_SERVER_URL=http://prometheus:9090/api/v1/write
+#      - K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM=true
+#    depends_on:
+#      - prometheus
+#    extra_hosts:
+#      - "host.docker.internal:host-gateway"
+
+  app:
+    image: openjdk:17-slim
+    container_name: app
+    working_dir: /app
+    volumes:
+      - ./docker/app:/app
+    ports:
+      - "8888:8080"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+    command: java -jar -Dspring.profiles.active=docker app.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: '1GB'
+
 networks:
   default:
     driver: bridge
+
+secrets:
+  influxdb2-admin-username:
+    file: docker/.env.influxdb2-admin-username
+  influxdb2-admin-password:
+    file: docker/.env.influxdb2-admin-password
+  influxdb2-admin-token:
+    file: docker/.env.influxdb2-admin-token

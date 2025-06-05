@@ -31,9 +31,12 @@ dependencyManagement {
 
 dependencies {
     // Spring
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")
+
+    // Grafana
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.15.0")
 
     // swagger
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
@@ -79,4 +82,9 @@ dependencies {
 tasks.withType<Test> {
     useJUnitPlatform()
     systemProperty("user.timezone", "UTC")
+}
+
+tasks.bootJar {
+    archiveFileName = "app.jar"
+    destinationDirectory = file("./docker/app")
 }
