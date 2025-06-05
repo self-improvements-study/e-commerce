@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.testcontainers.utility.DockerImageName;
 
 @Configuration
-class RedisTestcontainersConfiguration {
+class RedisTestcontainersConfig {
 
     public static final RedisContainer REDIS_CONTAINER;
 

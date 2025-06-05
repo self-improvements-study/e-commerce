@@ -20,6 +20,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderValidators orderValidators;
     private final TransactionTemplate transactionTemplate;
+    @Qualifier("orderEventExternalPublisher")
     private final OrderEventPublisher orderEventPublisher;
 
     /**
@@ -91,10 +92,6 @@ public class OrderService {
 
         List<OrderItem> savedOrderItems = orderRepository.saveOrderItem(orderItems);
 
-        OrderEvent.CreateOrder event = OrderEvent.CreateOrder.from(savedOrder, items);
-
-        orderEventPublisher.publish(event);
-
         return OrderInfo.OrderSummary.from(savedOrder, savedOrderItems);
     }
 
@@ -150,7 +147,7 @@ public class OrderService {
                 .map(OrderQuery.OrderItemProjection::to)
                 .toList();
 
-        OrderEvent.Send event = OrderEvent.Send.from(order, orderItem);
+        OrderEvent.OrderCompleted event = OrderEvent.OrderCompleted.from(order, orderItem);
         orderEventPublisher.publish(event);
     }
 

@@ -15,15 +15,6 @@ public class CouponController implements CouponApi {
 
     private final CouponFacade couponFacade;
 
-    // 선착순 쿠폰 발급
-    @PostMapping
-    public CouponResponse.CreateUserCoupon createUserCoupon(
-            @RequestBody CouponRequest.Issue request
-    ) {
-        CouponResult.IssuedCoupon issuedCouponDetail = couponFacade.issueCoupon(request.toCriteria());
-        return CouponResponse.CreateUserCoupon.from(issuedCouponDetail);
-    }
-
     @PostMapping("/enqueue")
     public CouponResponse.IssuedCoupon addCouponRequest(
             @RequestBody CouponRequest.Issue request

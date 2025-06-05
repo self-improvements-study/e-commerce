@@ -60,20 +60,21 @@ class CouponServiceIntegrationTest {
                     .sample();
             entityManager.persist(coupon);
 
-            CouponCommand.IssuedCoupon command = new CouponCommand.IssuedCoupon(user.getId(), coupon.getId());
+
+            CouponCommand.IssuedCoupon issuedCoupon = new CouponCommand.IssuedCoupon(user.getId(), coupon.getId());
+
+            List<CouponCommand.IssuedCoupon> list = List.of(issuedCoupon);
+            CouponCommand.IssuedCouponBatch command = new CouponCommand.IssuedCouponBatch(coupon.getId(), list);
 
             // when
-            CouponInfo.IssuedCoupon result = sut.issueCoupon(command);
+            sut.issueCoupon(command);
 
             // then
             List<CouponInfo.OwnedCoupon> userCoupons = sut.findUserCoupons(user.getId())
                     .stream()
                     .filter(v -> v.getCouponId() == coupon.getId()).toList();
 
-            assertThat(result).isNotNull();
-            assertThat(result.getCouponId()).isEqualTo(coupon.getId());
-            assertThat(result.getCouponName()).isNotBlank();
-            assertThat(userCoupons.get(0).getCouponId()).isEqualTo(result.getCouponId());
+            assertThat(userCoupons.get(0).getCouponId()).isEqualTo(coupon.getId());
         }
 
         @Test
@@ -82,7 +83,11 @@ class CouponServiceIntegrationTest {
             // given
             long userId = RandomGenerator.nextPositiveLong(Long.MAX_VALUE);
             long invalidCouponId = RandomGenerator.nextPositiveLong(Long.MAX_VALUE);
-            CouponCommand.IssuedCoupon command = new CouponCommand.IssuedCoupon(userId, invalidCouponId);
+
+            CouponCommand.IssuedCoupon issuedCoupon = new CouponCommand.IssuedCoupon(userId, invalidCouponId);
+
+            List<CouponCommand.IssuedCoupon> list = List.of(issuedCoupon);
+            CouponCommand.IssuedCouponBatch command = new CouponCommand.IssuedCouponBatch(invalidCouponId, list);
 
             // expect
             assertThatThrownBy(() -> sut.issueCoupon(command))
@@ -111,7 +116,10 @@ class CouponServiceIntegrationTest {
                     .sample();
             entityManager.persist(coupon);
 
-            CouponCommand.IssuedCoupon command = new CouponCommand.IssuedCoupon(user.getId(), coupon.getId());
+            CouponCommand.IssuedCoupon issuedCoupon = new CouponCommand.IssuedCoupon(user.getId(), coupon.getId());
+
+            List<CouponCommand.IssuedCoupon> list = List.of(issuedCoupon);
+            CouponCommand.IssuedCouponBatch command = new CouponCommand.IssuedCouponBatch(coupon.getId(), list);
 
             // expect
             assertThatThrownBy(() -> sut.issueCoupon(command))
@@ -148,8 +156,13 @@ class CouponServiceIntegrationTest {
                     .sample();
             entityManager.persist(userCoupon);
 
+            CouponCommand.IssuedCoupon issuedCoupon = new CouponCommand.IssuedCoupon(user.getId(), coupon.getId());
+
+            List<CouponCommand.IssuedCoupon> list = List.of(issuedCoupon);
+            CouponCommand.IssuedCouponBatch command = new CouponCommand.IssuedCouponBatch(coupon.getId(), list);
+
             // expect
-            assertThatThrownBy(() -> sut.issueCoupon(new CouponCommand.IssuedCoupon(user.getId(), coupon.getId())))
+            assertThatThrownBy(() -> sut.issueCoupon(command))
                     .isInstanceOf(BusinessException.class)
                     .hasMessage(BusinessError.COUPON_ALREADY_ISSUED.getMessage());
         }
